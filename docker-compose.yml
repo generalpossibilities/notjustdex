@@ -1,0 +1,78 @@
+name: dexchats
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: dexchats
+      POSTGRES_PASSWORD: dexchats
+      POSTGRES_DB: dexchats
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+
+  auth:
+    build: ./services/auth
+    ports:
+      - "8081:8081"
+    environment:
+      LISTEN_ADDR: ":8081"
+      JWT_SECRET: "${JWT_SECRET:-dev-secret}"
+
+  users:
+    build: ./services/users
+    ports:
+      - "8082:8082"
+    environment:
+      LISTEN_ADDR: ":8082"
+
+  feed:
+    build: ./services/feed
+    ports:
+      - "8083:8083"
+    environment:
+      LISTEN_ADDR: ":8083"
+
+  hus:
+    build: ./services/hus
+    ports:
+      - "8085:8085"
+    environment:
+      LISTEN_ADDR: ":8085"
+
+  chat:
+    build: ./services/chat
+    ports:
+      - "8086:8086"
+    environment:
+      LISTEN_ADDR: ":8086"
+
+  search:
+    build: ./services/search
+    ports:
+      - "8087:8087"
+    environment:
+      LISTEN_ADDR: ":8087"
+
+  notifications:
+    build: ./services/notifications
+    ports:
+      - "8088:8088"
+    environment:
+      LISTEN_ADDR: ":8088"
+
+  media:
+    build: ./services/media
+    ports:
+      - "8089:8089"
+    environment:
+      LISTEN_ADDR: ":8089"
+
+volumes:
+  pgdata:

@@ -1,0 +1,13 @@
+version: v2
+plugins:
+  - local: protoc-gen-dart
+    out: lib/src/generated
+    opt: grpc
+  - local: protoc-gen-go
+    out: .
+    opt: paths=source_relative
+  - local: protoc-gen-connect-go
+    out: .
+    opt: paths=source_relative
+inputs:
+  - directory: proto

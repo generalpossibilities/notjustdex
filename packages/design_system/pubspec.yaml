@@ -1,0 +1,11 @@
+name: dexchats_design_system
+description: DexChats design system
+publish_to: none
+version: 0.1.0
+
+environment:
+  sdk: ^3.7.0
+
+dependencies:
+  flutter:
+    sdk: flutter

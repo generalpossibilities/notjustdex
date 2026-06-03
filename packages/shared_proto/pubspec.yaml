@@ -1,0 +1,14 @@
+name: dexchats_shared_proto
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.7.0
+
+dependencies:
+  protobuf: ^3.1.0
+  grpc: ^4.0.0
+
+dev_dependencies:
+  build_runner: ^2.4.0
+  protoc_plugin: ^22.0.0

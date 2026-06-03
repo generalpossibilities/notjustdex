@@ -1,0 +1,32 @@
+# Dart / Flutter
+.dart_tool/
+.packages
+pubspec.lock
+build/
+*.freezed.dart
+*.g.dart
+*.gr.dart
+*.pb.dart
+*.pbenum.dart
+
+# Go
+vendor/
+*.exe
+*.test
+*.out
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.local
+*.log
+dexchats_phases

@@ -1,0 +1,24 @@
+[package]
+name = "hus-contract"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+serde = { version = "1.0", default-features = false, features = ["derive", "alloc"] }
+ark-bn254 = { version = "0.5", default-features = false, features = ["scalar_field", "curve"] }
+ark-ff = { version = "0.5", default-features = false }
+ark-serialize = { version = "0.5", default-features = false }
+ark-groth16 = { version = "0.5", default-features = false }
+ark-ec = { version = "0.5", default-features = false }
+ark-relations = { version = "0.5", default-features = false }
+ark-std = { version = "0.5", default-features = false }
+
+[dev-dependencies]
+ark-r1cs-std = { version = "0.5", default-features = false }
+
+[features]
+default = ["std"]
+std = ["serde/std", "ark-bn254/std", "ark-ff/std", "ark-serialize/std", "ark-groth16/std", "ark-ec/std", "ark-relations/std", "ark-std/std"]

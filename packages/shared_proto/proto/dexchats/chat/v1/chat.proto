@@ -1,0 +1,95 @@
+syntax = "proto3";
+
+package dexchats.chat.v1;
+
+option go_package = "github.com/dexchats/chat/v1;chatv1";
+
+import "dexchats/common/v1/common.proto";
+
+service ChatService {
+  rpc SendMessage(SendMessageRequest) returns (SendMessageResponse);
+  rpc GetMessages(GetMessagesRequest) returns (GetMessagesResponse);
+  rpc CreateConversation(CreateConversationRequest) returns (CreateConversationResponse);
+  rpc GetConversations(GetConversationsRequest) returns (GetConversationsResponse);
+  rpc MarkRead(MarkReadRequest) returns (MarkReadResponse);
+  rpc SetTyping(TypingIndicator) returns (TypingIndicator);
+}
+
+message Conversation {
+  string id = 1;
+  string type = 2;
+  repeated string participant_ids = 3;
+  Message last_message = 4;
+  int32 unread_count = 5;
+  dexchats.common.v1.Timestamp created_at = 6;
+}
+
+message Message {
+  string id = 1;
+  string conversation_id = 2;
+  string sender_id = 3;
+  string content = 4;
+  string content_type = 5;
+  dexchats.common.v1.Timestamp sent_at = 6;
+  repeated Reaction reactions = 7;
+  string reply_to_id = 8;
+}
+
+message Reaction {
+  string user_id = 1;
+  string emoji = 2;
+}
+
+message SendMessageRequest {
+  string conversation_id = 1;
+  string sender_id = 2;
+  string content = 3;
+  string content_type = 4;
+  string reply_to_id = 5;
+}
+
+message SendMessageResponse {
+  Message message = 1;
+}
+
+message GetMessagesRequest {
+  string conversation_id = 1;
+  dexchats.common.v1.Pagination pagination = 2;
+}
+
+message GetMessagesResponse {
+  repeated Message messages = 1;
+  int32 total = 2;
+}
+
+message CreateConversationRequest {
+  string type = 1;
+  repeated string participant_ids = 2;
+}
+
+message CreateConversationResponse {
+  Conversation conversation = 1;
+}
+
+message GetConversationsRequest {
+  string identity_id = 1;
+}
+
+message GetConversationsResponse {
+  repeated Conversation conversations = 1;
+}
+
+message MarkReadRequest {
+  string conversation_id = 1;
+  string identity_id = 2;
+}
+
+message MarkReadResponse {
+  bool success = 1;
+}
+
+message TypingIndicator {
+  string conversation_id = 1;
+  string identity_id = 2;
+  bool is_typing = 3;
+}

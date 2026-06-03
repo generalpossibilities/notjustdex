@@ -1,0 +1,41 @@
+name: dexchats_mobile
+description: DexChats mobile app
+publish_to: none
+version: 0.1.0+1
+
+environment:
+  sdk: ^3.7.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_bloc: ^8.1.6
+  bloc: ^8.1.4
+  go_router: ^14.6.0
+  flutter_hooks: ^0.20.5
+  freezed_annotation: ^2.4.4
+  json_annotation: ^4.9.0
+  isar: ^3.1.0+1
+  isar_flutter_libs: ^3.1.0+1
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
+  dexchats_identity_kernel:
+    path: ../../packages/identity_kernel
+  dexchats_design_system:
+    path: ../../packages/design_system
+  dexchats_in_app_browser:
+    path: ../../packages/in_app_browser
+  dexchats_mini_app_runtime:
+    path: ../../packages/mini_app_runtime
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  build_runner: ^2.4.0
+  freezed: ^2.5.7
+  json_serializable: ^6.8.0
+  mockito: ^5.4.4
+  patrol: ^3.12.0
+
+flutter:
+  uses-material-design: true

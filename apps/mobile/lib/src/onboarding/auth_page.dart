@@ -1,0 +1,319 @@
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+
+/// Unified auth page — Log In or Sign Up in a single screen.
+/// Modes: phone (primary), passkey (returning), wallet (advanced).
+class AuthPage extends StatefulWidget {
+  /// 'login', 'register', or 'wallet'
+  final String mode;
+  const AuthPage({super.key, this.mode = 'register'});
+
+  @override
+  State<AuthPage> createState() => _AuthPageState();
+}
+
+class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
+  late TabController _tabController;
+  late String _currentMode;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentMode = widget.mode;
+    final initialIndex = _currentMode == 'login' ? 1 : 0;
+    _tabController = TabController(
+      length: widget.mode == 'wallet' ? 1 : 3,
+      vsync: this,
+      initialIndex: initialIndex,
+    );
+  }
+
+  @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isWallet = widget.mode == 'wallet';
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(isWallet ? 'Wallet Login' : 'Sign In'),
+        centerTitle: true,
+      ),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Column(
+            children: [
+              // Logo
+              const SizedBox(height: 32),
+              Icon(Icons.forum, size: 56, color: theme.colorScheme.primary),
+              const SizedBox(height: 8),
+              Text('DexChats', style: theme.textTheme.titleLarge?.copyWith(
+                fontWeight: FontWeight.bold,
+              )),
+              const SizedBox(height: 32),
+
+              if (!isWallet) ...[
+                // Login / Register tabs
+                Container(
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surfaceVariant,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: TabBar(
+                    controller: _tabController,
+                    indicator: BoxDecoration(
+                      color: theme.colorScheme.primary,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    indicatorSize: TabBarIndicatorSize.tab,
+                    dividerColor: Colors.transparent,
+                    labelColor: theme.colorScheme.onPrimary,
+                    unselectedLabelColor: theme.colorScheme.onSurfaceVariant,
+                    tabs: const [
+                      Tab(text: 'Register'),
+                      Tab(text: 'Log In'),
+                      Tab(text: 'Wallet'),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 32),
+              ],
+
+              // Content
+              Expanded(
+                child: isWallet
+                    ? _WalletLoginTab()
+                    : TabBarView(
+                        controller: _tabController,
+                        children: const [
+                          _RegisterTab(),
+                          _LoginTab(),
+                          _WalletLoginTab(),
+                        ],
+                      ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Registration Tab ───────────────────────────────────────────
+class _RegisterTab extends StatelessWidget {
+  const _RegisterTab();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return ListView(
+      children: [
+        // Passkey registration (biometric)
+        _AuthMethodCard(
+          icon: Icons.fingerprint,
+          title: 'Create with Passkey',
+          subtitle: 'Use biometrics (Face ID / fingerprint) as your account key',
+          onTap: () {
+            // 1. Register passkey (WebAuthn)
+            // 2. Create MPC wallet
+            // 3. Navigate to phone verification
+            context.push('/onboarding/phone');
+          },
+        ),
+
+        const SizedBox(height: 16),
+
+        // Phone registration
+        _AuthMethodCard(
+          icon: Icons.phone_android,
+          title: 'Register with Phone',
+          subtitle: 'Receive a verification code via SMS',
+          onTap: () => context.push('/onboarding/phone'),
+        ),
+
+        const SizedBox(height: 16),
+
+        // Wallet recovery
+        _AuthMethodCard(
+          icon: Icons.key,
+          title: 'Recovery Phrase',
+          subtitle: 'Restore using your 24-word seed phrase',
+          onTap: () => _showRecoveryDialog(context),
+          isSecondary: true,
+        ),
+
+        const SizedBox(height: 24),
+        Text(
+          'No crypto or blockchain terminology will appear during registration.',
+          style: TextStyle(color: theme.colorScheme.onSurfaceVariant, fontSize: 12),
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+  }
+
+  void _showRecoveryDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Restore Account'),
+        content: const TextField(
+          maxLines: 3,
+          decoration: InputDecoration(
+            hintText: 'Enter your 24-word recovery phrase...',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          FilledButton(onPressed: () {}, child: const Text('Restore')),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Login Tab ──────────────────────────────────────────────────
+class _LoginTab extends StatelessWidget {
+  const _LoginTab();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return ListView(
+      children: [
+        // Passkey login (reccommended)
+        _AuthMethodCard(
+          icon: Icons.fingerprint,
+          title: 'Sign In with Passkey',
+          subtitle: 'Fast biometric login — no password needed',
+          onTap: () {
+            // 1. Passkey assertion (WebAuthn)
+            // 2. If passkey found → ZKP wallet challenge → authenticated
+            // 3. If passkey not found → fallback to phone
+          },
+        ),
+
+        const SizedBox(height: 16),
+
+        // Phone login
+        _AuthMethodCard(
+          icon: Icons.phone_android,
+          title: 'Sign In with Phone',
+          subtitle: 'Verify your number to access your account',
+          onTap: () => context.push('/onboarding/phone'),
+        ),
+
+        const SizedBox(height: 16),
+
+        // Wallet login (advanced)
+        _AuthMethodCard(
+          icon: Icons.account_balance_wallet,
+          title: 'Wallet Login',
+          subtitle: 'Sign with your MPC wallet — advanced users',
+          onTap: () => context.push('/auth', extra: 'wallet'),
+          isSecondary: true,
+        ),
+      ],
+    );
+  }
+}
+
+// ─── Wallet Login Tab ───────────────────────────────────────────
+class _WalletLoginTab extends StatelessWidget {
+  const _WalletLoginTab();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return ListView(
+      children: [
+        const SizedBox(height: 16),
+        Container(
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: theme.colorScheme.surfaceVariant,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Column(
+            children: [
+              Icon(Icons.account_balance_wallet, size: 64, color: theme.colorScheme.primary),
+              const SizedBox(height: 16),
+              Text('Wallet Authentication', style: theme.textTheme.titleMedium?.copyWith(
+                fontWeight: FontWeight.bold,
+              )),
+              const SizedBox(height: 8),
+              Text(
+                'Sign a zero-knowledge proof challenge with your MPC wallet to authenticate.',
+                style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+                textAlign: TextAlign.center,
+              ),
+              const SizedBox(height: 24),
+              FilledButton.icon(
+                onPressed: () {
+                  // 1. Request challenge from auth service
+                  // 2. Sign with MPC wallet (no private key on device)
+                  // 3. Submit ZKP → auth service verifies → JWT
+                },
+                icon: const Icon(Icons.fingerprint),
+                label: const Text('Sign with Passkey + Wallet'),
+              ),
+              const SizedBox(height: 12),
+              OutlinedButton(
+                onPressed: () => context.push('/onboarding/phone'),
+                child: const Text('Use phone instead'),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ─── Auth Method Card ───────────────────────────────────────────
+class _AuthMethodCard extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
+  final bool isSecondary;
+
+  const _AuthMethodCard({
+    required this.icon,
+    required this.title,
+    required this.subtitle,
+    required this.onTap,
+    this.isSecondary = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Card(
+      elevation: isSecondary ? 0 : 1,
+      color: isSecondary
+          ? theme.colorScheme.surfaceVariant.withValues(alpha: 0.5)
+          : null,
+      child: ListTile(
+        leading: CircleAvatar(
+          backgroundColor: isSecondary
+              ? theme.colorScheme.surfaceVariant
+              : theme.colorScheme.primaryContainer,
+          child: Icon(icon, color: isSecondary ? null : theme.colorScheme.primary),
+        ),
+        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
+        subtitle: Text(subtitle, style: const TextStyle(fontSize: 12)),
+        trailing: const Icon(Icons.chevron_right),
+        onTap: onTap,
+      ),
+    );
+  }
+}

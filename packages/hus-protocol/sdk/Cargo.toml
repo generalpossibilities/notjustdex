@@ -1,0 +1,31 @@
+[package]
+name = "hus-sdk"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["rlib"]
+
+[dependencies]
+libm = { version = "0.2", default-features = false }
+ark-bn254 = { version = "0.5", default-features = false, features = ["scalar_field", "curve"] }
+ark-std = { version = "0.5", default-features = false }
+ark-ff = { version = "0.5", default-features = false }
+ark-serialize = { version = "0.5", default-features = false }
+ark-relations = { version = "0.5", default-features = false }
+ark-r1cs-std = { version = "0.5", default-features = false }
+ark-groth16 = { version = "0.5", default-features = false }
+ark-poly = { version = "0.5", default-features = false }
+ark-ec = { version = "0.5", default-features = false }
+
+[dev-dependencies]
+hus-contract = { path = "../contracts" }
+
+[features]
+default = ["std"]
+std = ["ark-bn254/std", "ark-ff/std", "ark-serialize/std", "ark-relations/std", "ark-r1cs-std/std", "ark-groth16/std", "ark-poly/std", "ark-ec/std", "ark-std/std"]
+
+[[example]]
+name = "basic_integration"
+path = "examples/basic_integration.rs"
+required-features = ["std"]

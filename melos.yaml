@@ -1,0 +1,47 @@
+name: dexchats
+
+packages:
+  - apps/**
+  - packages/**
+
+command:
+  bootstrap:
+    runPubGetInParallel: true
+    usePubspecOverrides: true
+
+  clean:
+    hooks:
+      pre: melos run clean:go
+
+scripts:
+  analyze:
+    run: melos exec -c 1 -- dart analyze .
+    description: Run dart analyzer across all packages
+
+  format:
+    run: melos exec -- dart format .
+    description: Format dart code across all packages
+
+  test:
+    run: melos exec -- dart test
+    description: Run dart tests across all packages
+
+  test:go:
+    run: melos run test:go:all
+    description: Run all Go tests
+
+  gen:
+    run: melos run gen:proto && melos run gen:code
+    description: Regenerate all code
+
+  gen:proto:
+    run: melos exec -c 1 -- dart run build_runner build --delete-conflicting-outputs
+    description: Generate protobuf dart code
+
+  gen:code:
+    run: melos exec -c 1 -- dart run build_runner build --delete-conflicting-outputs
+    description: Run dart code generation (freezed, json_serializable)
+
+  clean:go:
+    run: melos exec -c 1 -- go clean -modcache
+    description: Clean Go module cache
