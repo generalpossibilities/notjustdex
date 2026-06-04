@@ -3,12 +3,16 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'identity_event.dart';
 import 'identity_state.dart';
 import '../services/identity_service.dart';
+import '../services/wallet_service.dart';
 
 class IdentityBloc extends Bloc<IdentityEvent, IdentityState> {
   final IdentityService _identityService;
+  final WalletService? _walletService;
   StreamSubscription? _identitySubscription;
 
-  IdentityBloc(this._identityService) : super(const IdentityInitial()) {
+  IdentityBloc(this._identityService, {WalletService? walletService})
+      : _walletService = walletService,
+        super(const IdentityInitial()) {
     on<CreateIdentity>(_onCreateIdentity);
     on<LoadIdentity>(_onLoadIdentity);
     on<UpdateProfile>(_onUpdateProfile);
@@ -29,7 +33,13 @@ class IdentityBloc extends Bloc<IdentityEvent, IdentityState> {
         username: event.username,
         displayName: event.displayName,
       );
-      emit(IdentityAuthenticated(identity));
+
+      if (_walletService != null) {
+        final wallet = await _walletService!.initializeWallet(identity.id);
+        emit(IdentityAuthenticated(identity.copyWith(wallet: wallet)));
+      } else {
+        emit(IdentityAuthenticated(identity));
+      }
     } catch (e) {
       emit(IdentityError(e.toString()));
     }
@@ -42,7 +52,13 @@ class IdentityBloc extends Bloc<IdentityEvent, IdentityState> {
     emit(const IdentityLoading());
     try {
       final identity = await _identityService.getIdentity(event.identityId);
-      emit(IdentityAuthenticated(identity));
+
+      if (_walletService != null) {
+        final wallet = await _walletService!.getWallet(identity.id);
+        emit(IdentityAuthenticated(identity.copyWith(wallet: wallet)));
+      } else {
+        emit(IdentityAuthenticated(identity));
+      }
     } catch (e) {
       emit(const IdentityUnauthenticated());
     }

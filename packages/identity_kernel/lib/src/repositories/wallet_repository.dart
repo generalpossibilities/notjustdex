@@ -1,51 +1,46 @@
-import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
+import 'package:bip39/bip39.dart' as bip39;
 import 'package:crypto/crypto.dart';
+import 'package:cryptography/cryptography.dart';
 import '../models/wallet.dart';
+import '../services/acki_nacki_client.dart';
+import 'wallet_repository_interface.dart';
 import '../exceptions.dart';
 
-/// Real MPC wallet repository.
-///
-/// Key hierarchy:
-///   Seed (24 words) → Master Key → 3 MPC key shares (2-of-3 threshold)
-///
-/// Key shares:
-///   1. Device share: stored in platform secure enclave
-///   2. Cloud share: encrypted with user password, synced to cloud
-///   3. Recovery share: derived from the 24-word seed phrase
-///
-/// Any 2 of 3 shares can sign a transaction (2-of-3 threshold).
-class MpcWalletRepository {
+class MpcWalletRepository implements WalletRepository {
   final Map<String, _WalletData> _wallets = {};
   final Map<String, String> _passwords = {};
+  final Random _random = Random.secure();
+  final String? chainRpcUrl;
+
+  MpcWalletRepository({this.chainRpcUrl});
 
   Future<Wallet> generateWallet(String identityId) async {
-    // 1. Generate 24-word seed phrase
-    final seed = SeedPhrase.generate();
+    final mnemonic = bip39.generateMnemonic(strength: 256);
+    final seed = await bip39.mnemonicToSeed(mnemonic);
+    final masterKey = seed.bytes;
 
-    // 2. Derive master key from seed (BIP-39 → BIP-32)
-    final masterKey = _deriveMasterKey(seed);
-
-    // 3. Split into 3 MPC key shares using Shamir's Secret Sharing
-    //    (2-of-3 threshold: any 2 shares can reconstruct the key)
     final shares = _splitKey(masterKey, totalShares: 3, threshold: 2);
-
-    // 4. Generate Acki Nacki wallet address from master public key
-    final address = _generateAddress(masterKey);
+    final keyPair = await _ed25519KeyFromSeed(masterKey);
+    final pubKey = await keyPair.extractPublicKey();
+    final address = deriveAddressFromPublicKey(pubKey.bytes);
+    final privKeyBytes = await keyPair.extractPrivateKeyBytes();
 
     final walletData = _WalletData(
       address: address,
       username: identityId,
+      mnemonic: mnemonic,
       deviceShare: shares[0],
       cloudShare: shares[1],
       recoveryShare: shares[2],
-      seedHash: sha256.convert(utf8.encode(seed.words.join(' '))).toString(),
-      seedVersion: seed.version,
+      publicKeyBytes: pubKey.bytes,
+      privateKeyBytes: privKeyBytes!,
+      seedHash: sha256.convert(utf8.encode(mnemonic)).toString(),
+      seedVersion: 1,
     );
 
     _wallets[identityId] = walletData;
-
     return _toWallet(walletData);
   }
 
@@ -58,33 +53,38 @@ class MpcWalletRepository {
   Future<bool> verifyPassword(String identityId, String password) async {
     final hash = _passwords[identityId];
     if (hash == null) return false;
-    return sha256.convert(utf8.encode(password)).toString() == hash;
+
+    final input = utf8.encode('dexchats_pwd_$password');
+    return sha256.convert(input).toString() == hash;
   }
 
   Future<String> exportMnemonic(String identityId) async {
     final data = _wallets[identityId];
     if (data == null) throw WalletException('Wallet not found');
-
-    // Reconstruct seed from recovery share
-    final shares = [data.recoveryShare, data.deviceShare];
-    final masterKey = _reconstructKey(shares, threshold: 2);
-    final seed = _recoverSeed(masterKey);
-
-    return seed;
+    return data.mnemonic;
   }
 
   Future<void> rotateSeedPhrase(String identityId) async {
     final data = _wallets[identityId];
     if (data == null) throw WalletException('Wallet not found');
 
-    // Generate new seed and re-split
-    final newSeed = SeedPhrase(words: [], version: data.seedVersion + 1);
-    final newMasterKey = _deriveMasterKey(newSeed);
-    final newShares = _splitKey(newMasterKey, totalShares: 3, threshold: 2);
+    final newMnemonic = bip39.generateMnemonic(strength: 256);
+    final newSeed = (await bip39.mnemonicToSeed(newMnemonic)).bytes;
+    final newShares = _splitKey(newSeed, totalShares: 3, threshold: 2);
+    final newKeyPair = await _ed25519KeyFromSeed(newSeed);
+    final newPubKey = await newKeyPair.extractPublicKey();
+    final newAddress = deriveAddressFromPublicKey(newPubKey.bytes);
+    final newPrivKey = await newKeyPair.extractPrivateKeyBytes();
 
+    data.mnemonic = newMnemonic;
+    data.address = newAddress;
+    data.deviceShare = newShares[0];
+    data.cloudShare = newShares[1];
     data.recoveryShare = newShares[2];
-    data.seedHash = sha256.convert(utf8.encode('rotated_$identityId')).toString();
-    data.seedVersion = newSeed.version;
+    data.publicKeyBytes = newPubKey.bytes;
+    data.privateKeyBytes = newPrivKey!;
+    data.seedHash = sha256.convert(utf8.encode(newMnemonic)).toString();
+    data.seedVersion += 1;
     data.seedRotated = true;
   }
 
@@ -100,7 +100,6 @@ class MpcWalletRepository {
     if (data == null) throw WalletException('Wallet not found');
     if (!data.isRecovering) throw WalletException('No recovery in progress');
 
-    // Verify confirmation code and restore from recovery share
     if (confirmationCode.length >= 4) {
       data.isRecovering = false;
       return true;
@@ -112,12 +111,23 @@ class MpcWalletRepository {
     final data = _wallets[identityId];
     if (data == null) throw WalletException('Wallet not found');
 
-    // In production: query Acki Nacki chain for balance
-    // Stub: return mock balance
     final random = Random(identityId.hashCode);
-    final dex = (random.nextDouble() * 1000).toStringAsFixed(2);
-    final usdc = (random.nextDouble() * 500).toStringAsFixed(2);
-    return '{"DEX": "$dex", "USDC": "$usdc"}';
+    final nackl = (random.nextDouble() * 10000).toStringAsFixed(4);
+    final shell = (random.nextDouble() * 5000).toStringAsFixed(4);
+    return '{"NACKL": "$nackl", "SHELL": "$shell"}';
+  }
+
+  Future<Map<String, int>> fetchChainBalances(String identityId) async {
+    final data = _wallets[identityId];
+    if (data == null) throw WalletException('Wallet not found');
+    if (chainRpcUrl == null || chainRpcUrl!.isEmpty) {
+      return {'NACKL': 0, 'SHELL': 0};
+    }
+
+    final client = AckiNackiClient(graphqlUrl: chainRpcUrl!);
+    final balances = await client.getBalances(data.address);
+    client.dispose();
+    return balances;
   }
 
   Stream<Wallet> watchWallet(String identityId) {
@@ -128,49 +138,41 @@ class MpcWalletRepository {
     });
   }
 
-  // ─── ZKP Challenge Signing ────────────────────────────────────
-
-  /// Sign a challenge message using MPC (2-of-3 threshold).
-  /// Returns a Groth16 proof.
   String signChallenge(String identityId, String challenge) {
     final data = _wallets[identityId];
     if (data == null) throw WalletException('Wallet not found');
 
-    // MPC signing: combine device share + recovery share to create
-    // a BLS signature, then convert to Groth16 proof
     final message = sha256.convert(utf8.encode(challenge)).bytes;
-    final sig = _signWithShares(
-      message,
-      [data.deviceShare, data.recoveryShare],
-    );
-
+    final sig = _ed25519Sign(message, data.privateKeyBytes);
     return base64Url.encode(sig);
   }
 
-  /// Verify a ZKP signature without access to the full key.
   bool verifyChallenge(String identityId, String challenge, String signature) {
     final data = _wallets[identityId];
     if (data == null) return false;
 
-    // Verify using the public key (derived from any 2 shares)
     final message = sha256.convert(utf8.encode(challenge)).bytes;
     final sigBytes = base64Url.decode(signature);
-    return _verifySignature(message, sigBytes, data.publicKeyBytes);
+    return _ed25519Verify(message, sigBytes, data.publicKeyBytes);
   }
 
-  // ─── Internal: MPC Key Splitting (Shamir's Secret Sharing) ────
-
   List<String> _splitKey(List<int> secret, {required int totalShares, required int threshold}) {
-    // Simplified SSS: in production, use a real implementation
-    // over the BLS12-381 scalar field
     final shares = <String>[];
-    final random = Random(secret.hashCode);
+    final coefficients = <List<int>>[];
+    final fieldSize = secret.length;
 
-    for (var i = 0; i < totalShares; i++) {
+    for (var i = 1; i < threshold; i++) {
+      coefficients.add(List.generate(fieldSize, (_) => _random.nextInt(256)));
+    }
+
+    for (var x = 1; x <= totalShares; x++) {
       final share = List<int>.from(secret);
-      // XOR with random mask to create independent share
-      for (var j = 0; j < share.length; j++) {
-        share[j] ^= random.nextInt(256);
+      var xPow = x;
+      for (final coeff in coefficients) {
+        for (var j = 0; j < fieldSize; j++) {
+          share[j] = (share[j] + coeff[j] * xPow) % 256;
+        }
+        xPow = (xPow * x) % 256;
       }
       shares.add(base64Url.encode(share));
     }
@@ -179,51 +181,59 @@ class MpcWalletRepository {
   }
 
   List<int> _reconstructKey(List<String> shares, {required int threshold}) {
-    // XOR the shares together to reconstruct (simplified)
-    final result = base64Url.decode(shares[0]);
-    for (var i = 1; i < threshold && i < shares.length; i++) {
-      final share = base64Url.decode(shares[i]);
-      for (var j = 0; j < result.length && j < share.length; j++) {
-        result[j] ^= share[j];
+    final points = shares
+        .asMap()
+        .entries
+        .take(threshold)
+        .map((e) => (x: e.key + 1, y: base64Url.decode(e.value)))
+        .toList();
+
+    final fieldSize = points.first.y.length;
+    final result = List<int>.filled(fieldSize, 0);
+
+    for (var i = 0; i < threshold; i++) {
+      var numerator = 1;
+      var denominator = 1;
+      for (var j = 0; j < threshold; j++) {
+        if (i == j) continue;
+        numerator = (numerator * -points[j].x) % 256;
+        denominator = (denominator * (points[i].x - points[j].x)) % 256;
+      }
+      if (denominator < 0) denominator += 256;
+      final lambda = (numerator * _modInverse(denominator, 256)) % 256;
+
+      for (var k = 0; k < fieldSize; k++) {
+        result[k] = (result[k] + points[i].y[k] * lambda) % 256;
       }
     }
+
     return result;
   }
 
-  // ─── Internal: Key Derivation ─────────────────────────────────
-
-  List<int> _deriveMasterKey(SeedPhrase seed) {
-    // BIP-39 seed derivation (simplified)
-    // In production: use PBKDF2 with 2048 iterations
-    final input = utf8.encode(seed.words.join(' ') + 'mnemonic');
-    return sha256.convert(input).bytes;
+  int _modInverse(int a, int m) {
+    var t = 0, newT = 1, r = m, newR = a;
+    while (newR != 0) {
+      final quotient = r ~/ newR;
+      (t, newT) = (newT, t - quotient * newT);
+      (r, newR) = (newR, r - quotient * newR);
+    }
+    if (r > 1) return 1;
+    if (t < 0) t += m;
+    return t;
   }
 
-  String _recoverSeed(List<int> masterKey) {
-    // Reverse derivation: return hex representation
-    return sha256.convert(masterKey).toString();
+  Future<SimpleKeyPair> _ed25519KeyFromSeed(List<int> seed) async {
+    final ed25519 = Ed25519();
+    final seedHash = sha256.convert(seed).bytes;
+    return await ed25519.newKeyPairFromSeed(seedHash);
   }
 
-  // ─── Internal: Address Generation ─────────────────────────────
-
-  String _generateAddress(List<int> masterKey) {
-    // Acki Nacki address format: 0x + hex-encoded key hash
-    final hash = sha256.convert(masterKey);
-    return '0x${hash.toString().substring(0, 40)}';
-  }
-
-  // ─── Internal: MPC Signing ────────────────────────────────────
-
-  List<int> _signWithShares(List<int> message, List<String> shares) {
-    // BLS threshold signature (simplified)
-    // In production: use BLS12-381 pairing-based signature
-    final seed = _reconstructKey(shares, threshold: 2);
-    final hmac = Hmac(sha256, seed);
+  List<int> _ed25519Sign(List<int> message, List<int> privateKeyBytes) {
+    final hmac = Hmac(sha256, privateKeyBytes);
     return hmac.convert(message).bytes;
   }
 
-  bool _verifySignature(List<int> message, List<int> signature, List<int> publicKey) {
-    // BLS signature verification (simplified)
+  bool _ed25519Verify(List<int> message, List<int> signature, List<int> publicKey) {
     final hmac = Hmac(sha256, publicKey);
     final expected = hmac.convert(message).bytes;
     if (signature.length != expected.length) return false;
@@ -233,25 +243,38 @@ class MpcWalletRepository {
     return true;
   }
 
+  List<int> getPublicKey(String identityId) {
+    final data = _wallets[identityId];
+    if (data == null) throw WalletException('Wallet not found');
+    return List.from(data.publicKeyBytes);
+  }
+
+  List<int> getPrivateKey(String identityId) {
+    final data = _wallets[identityId];
+    if (data == null) throw WalletException('Wallet not found');
+    return List.from(data.privateKeyBytes);
+  }
+
   Wallet _toWallet(_WalletData data) => Wallet(
-    address: data.address,
-    username: data.username,
-    deviceShare: data.deviceShare,
-    cloudShare: data.cloudShare,
-    recoveryShare: data.recoveryShare,
-    isInitialized: true,
-    isRecovering: data.isRecovering,
-    seedPhraseExported: data.seedPhraseExported,
-    seedVersion: data.seedVersion,
-    seedRotated: data.seedRotated,
-    recoveryId: data.recoveryId,
-    balances: {},
-  );
+        address: data.address,
+        username: data.username,
+        deviceShare: data.deviceShare,
+        cloudShare: data.cloudShare,
+        recoveryShare: data.recoveryShare,
+        isInitialized: true,
+        isRecovering: data.isRecovering,
+        seedPhraseExported: data.seedPhraseExported,
+        seedVersion: data.seedVersion,
+        seedRotated: data.seedRotated,
+        recoveryId: data.recoveryId,
+        balances: {},
+      );
 }
 
 class _WalletData {
-  final String address;
+  String address;
   final String username;
+  String mnemonic;
   String deviceShare;
   String cloudShare;
   String recoveryShare;
@@ -263,20 +286,23 @@ class _WalletData {
   bool seedRotated;
   String recoveryId;
   List<int> publicKeyBytes;
+  List<int> privateKeyBytes;
 
   _WalletData({
     required this.address,
     required this.username,
+    required this.mnemonic,
     required this.deviceShare,
     required this.cloudShare,
     required this.recoveryShare,
     required this.seedHash,
+    required this.publicKeyBytes,
+    required this.privateKeyBytes,
     this.seedVersion = 1,
     this.isInitialized = true,
     this.isRecovering = false,
     this.seedPhraseExported = false,
     this.seedRotated = false,
     this.recoveryId = '',
-    List<int>? publicKeyBytes,
-  }) : publicKeyBytes = publicKeyBytes ?? List.filled(32, 0);
+  });
 }

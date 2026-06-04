@@ -10,7 +10,8 @@ import (
 )
 
 func main() {
-	svc := service.NewUserService()
+	graphqlURL := os.Getenv("AN_GRAPHQL_URL")
+	svc := service.NewUserService(graphqlURL)
 	h := handler.NewUserHandler(svc)
 
 	mux := http.NewServeMux()

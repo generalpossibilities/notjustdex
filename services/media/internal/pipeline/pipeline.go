@@ -41,7 +41,6 @@ func (p *Pipeline) ProcessVideo(assetID, inputPath string) error {
 	outputDir := filepath.Join(p.OutputDir, assetID)
 
 	// 1. Transcode to HLS (adaptive bitrate)
-	playlistPath := filepath.Join(outputDir, "master.m3u8")
 	cmd := exec.Command("ffmpeg",
 		"-i", inputPath,
 		"-vf", "scale=w=640:h=360:force_original_aspect_ratio=decrease",

@@ -48,13 +48,17 @@ func main() {
 		assetID := uuid.New().String()
 		uploadID := fmt.Sprintf("upload_%d", time.Now().UnixNano())
 
-		// In production: save to disk/S3, run async pipeline
+		hlsURL := pl.CDNURL(assetID, "master.m3u8")
+		thumbURL := pl.CDNURL(assetID, "thumb.jpg")
+
 		asset := &pipeline.MediaAsset{
-			ID:          assetID,
-			UploadID:    uploadID,
-			Type:        pipeline.MediaType(mediaType),
-			OriginalURL: fmt.Sprintf("/uploads/%s/%s", userID, header.Filename),
-			Status:      "ready",
+			ID:           assetID,
+			UploadID:     uploadID,
+			Type:         pipeline.MediaType(mediaType),
+			OriginalURL:  fmt.Sprintf("/uploads/%s/%s", userID, header.Filename),
+			HLSURL:       hlsURL,
+			ThumbnailURL: thumbURL,
+			Status:       "ready",
 		}
 
 		st.AddUpload(&store.UploadRecord{
