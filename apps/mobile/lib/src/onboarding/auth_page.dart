@@ -12,30 +12,10 @@ class AuthPage extends StatefulWidget {
   State<AuthPage> createState() => _AuthPageState();
 }
 
-class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
-  late TabController _tabController;
-  late String _currentMode;
-
-  @override
-  void initState() {
-    super.initState();
-    _currentMode = widget.mode;
-    final initialIndex = _currentMode == 'login' ? 1 : 0;
-    _tabController = TabController(
-      length: widget.mode == 'wallet' ? 1 : 3,
-      vsync: this,
-      initialIndex: initialIndex,
-    );
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
-  }
-
+class _AuthPageState extends State<AuthPage> {
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return ListView(
       children: [
         // Passkey registration (biometric)
@@ -99,104 +79,6 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
           FilledButton(onPressed: () {}, child: const Text('Restore')),
         ],
       ),
-    );
-  }
-}
-
-// ─── Login Tab ──────────────────────────────────────────────────
-class _LoginTab extends StatelessWidget {
-  const _LoginTab();
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return ListView(
-      children: [
-        // Passkey login (reccommended)
-        _AuthMethodCard(
-          icon: Icons.fingerprint,
-          title: 'Sign In with Passkey',
-          subtitle: 'Fast biometric login — no password needed',
-          onTap: () {
-            // 1. Passkey assertion (WebAuthn)
-            // 2. If passkey found → ZKP wallet challenge → authenticated
-            // 3. If passkey not found → fallback to phone
-          },
-        ),
-
-        const SizedBox(height: 16),
-
-        // Phone login
-        _AuthMethodCard(
-          icon: Icons.phone_android,
-          title: 'Sign In with Phone',
-          subtitle: 'Verify your number to access your account',
-          onTap: () => context.push('/onboarding/phone'),
-        ),
-
-        const SizedBox(height: 16),
-
-        // Wallet login (advanced)
-        _AuthMethodCard(
-          icon: Icons.account_balance_wallet,
-          title: 'Wallet Login',
-          subtitle: 'Sign with your MPC wallet — advanced users',
-          onTap: () => context.push('/auth', extra: 'wallet'),
-          isSecondary: true,
-        ),
-      ],
-    );
-  }
-}
-
-// ─── Wallet Login Tab ───────────────────────────────────────────
-class _WalletLoginTab extends StatelessWidget {
-  const _WalletLoginTab();
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return ListView(
-      children: [
-        const SizedBox(height: 16),
-        Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceContainerHighest,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Column(
-            children: [
-              Icon(Icons.account_balance_wallet, size: 64, color: theme.colorScheme.primary),
-              const SizedBox(height: 16),
-              Text('Wallet Authentication', style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-              )),
-              const SizedBox(height: 8),
-              Text(
-                'Sign a zero-knowledge proof challenge with your MPC wallet to authenticate.',
-                style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-              FilledButton.icon(
-                onPressed: () {
-                  // 1. Request challenge from auth service
-                  // 2. Sign with MPC wallet (no private key on device)
-                  // 3. Submit ZKP → auth service verifies → JWT
-                },
-                icon: const Icon(Icons.fingerprint),
-                label: const Text('Sign with Passkey + Wallet'),
-              ),
-              const SizedBox(height: 12),
-              OutlinedButton(
-                onPressed: () => context.push('/onboarding/phone'),
-                child: const Text('Use phone instead'),
-              ),
-            ],
-          ),
-        ),
-      ],
     );
   }
 }

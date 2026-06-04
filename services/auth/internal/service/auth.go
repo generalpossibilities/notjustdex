@@ -4,10 +4,8 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
-	"encoding/json"
 	"errors"
 	"fmt"
-	"math/big"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -289,7 +287,6 @@ func (s *AuthService) verifyGroth16Proof(proof ZKProof, chal *Challenge) error {
 	// Expected public inputs
 	challengeHash := sha256Hex(chal.ID + chal.Nonce)
 	walletHash := sha256Hex(chal.WalletAddr)
-	timestampHash := sha256Hex(fmt.Sprintf("%d", time.Now().UnixMilli()))
 
 	if len(proof.PublicInputs) != 3 {
 		return ErrInvalidProof
