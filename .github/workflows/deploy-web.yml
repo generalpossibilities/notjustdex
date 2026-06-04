@@ -28,6 +28,8 @@ jobs:
 
       - run: flutter config --enable-web
 
+      - run: melos run gen
+
       - run: flutter build web --release
         working-directory: apps/web
 

@@ -71,5 +71,7 @@ jobs:
       - run: flutter build apk --debug
         working-directory: apps/mobile
         if: false
+      - run: melos run gen
+
       - run: flutter build web --release
         working-directory: apps/web
