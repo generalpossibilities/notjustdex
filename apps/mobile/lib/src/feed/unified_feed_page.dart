@@ -128,7 +128,7 @@ class _UnifiedFeedPageState extends State<UnifiedFeedPage> {
                       decoration: InputDecoration(
                         hintText: 'Add a comment...',
                         filled: true,
-                        fillColor: Theme.of(context).colorScheme.surfaceVariant,
+                        fillColor: Theme.of(context).colorScheme.surfaceContainerHighest,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(24),
                           borderSide: BorderSide.none,

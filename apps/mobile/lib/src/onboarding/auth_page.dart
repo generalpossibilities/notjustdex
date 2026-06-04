@@ -36,83 +36,6 @@ class _AuthPageState extends State<AuthPage> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isWallet = widget.mode == 'wallet';
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(isWallet ? 'Wallet Login' : 'Sign In'),
-        centerTitle: true,
-      ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Column(
-            children: [
-              // Logo
-              const SizedBox(height: 32),
-              Icon(Icons.forum, size: 56, color: theme.colorScheme.primary),
-              const SizedBox(height: 8),
-              Text('DexChats', style: theme.textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              )),
-              const SizedBox(height: 32),
-
-              if (!isWallet) ...[
-                // Login / Register tabs
-                Container(
-                  decoration: BoxDecoration(
-                    color: theme.colorScheme.surfaceVariant,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: TabBar(
-                    controller: _tabController,
-                    indicator: BoxDecoration(
-                      color: theme.colorScheme.primary,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    indicatorSize: TabBarIndicatorSize.tab,
-                    dividerColor: Colors.transparent,
-                    labelColor: theme.colorScheme.onPrimary,
-                    unselectedLabelColor: theme.colorScheme.onSurfaceVariant,
-                    tabs: const [
-                      Tab(text: 'Register'),
-                      Tab(text: 'Log In'),
-                      Tab(text: 'Wallet'),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 32),
-              ],
-
-              // Content
-              Expanded(
-                child: isWallet
-                    ? _WalletLoginTab()
-                    : TabBarView(
-                        controller: _tabController,
-                        children: const [
-                          _RegisterTab(),
-                          _LoginTab(),
-                          _WalletLoginTab(),
-                        ],
-                      ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ─── Registration Tab ───────────────────────────────────────────
-class _RegisterTab extends StatelessWidget {
-  const _RegisterTab();
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return ListView(
       children: [
         // Passkey registration (biometric)
@@ -239,7 +162,7 @@ class _WalletLoginTab extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: theme.colorScheme.surfaceVariant,
+            color: theme.colorScheme.surfaceContainerHighest,
             borderRadius: BorderRadius.circular(16),
           ),
           child: Column(
@@ -300,12 +223,12 @@ class _AuthMethodCard extends StatelessWidget {
     return Card(
       elevation: isSecondary ? 0 : 1,
       color: isSecondary
-          ? theme.colorScheme.surfaceVariant.withValues(alpha: 0.5)
+          ? theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5)
           : null,
       child: ListTile(
         leading: CircleAvatar(
           backgroundColor: isSecondary
-              ? theme.colorScheme.surfaceVariant
+              ? theme.colorScheme.surfaceContainerHighest
               : theme.colorScheme.primaryContainer,
           child: Icon(icon, color: isSecondary ? null : theme.colorScheme.primary),
         ),

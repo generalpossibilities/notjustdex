@@ -112,7 +112,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                   child: ListTile(
                     leading: CircleAvatar(
                       backgroundColor: n.read
-                          ? theme.colorScheme.surfaceVariant
+                          ? theme.colorScheme.surfaceContainerHighest
                           : theme.colorScheme.primaryContainer,
                       child: Icon(_iconForType(n.type),
                           color: n.read ? Colors.grey : theme.colorScheme.primary),

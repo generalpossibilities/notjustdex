@@ -77,7 +77,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
             trailing: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceVariant,
+                color: theme.colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(4),
               ),
               child: Text('On-chain', style: TextStyle(fontSize: 10, color: theme.colorScheme.primary)),
@@ -132,7 +132,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
               width: double.infinity,
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: theme.colorScheme.surfaceVariant,
+                color: theme.colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: theme.colorScheme.error.withValues(alpha: 0.3)),
               ),

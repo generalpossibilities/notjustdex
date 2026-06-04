@@ -172,7 +172,7 @@ class _BrowserPageState extends State<BrowserPage> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
         color: theme.colorScheme.surface,
-        border: Border(top: BorderSide(color: theme.colorScheme.surfaceVariant)),
+        border: Border(top: BorderSide(color: theme.colorScheme.surfaceContainerHighest)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceEvenly,

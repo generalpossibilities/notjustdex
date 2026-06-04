@@ -70,7 +70,7 @@ class _ChatViewPageState extends State<ChatViewPage> {
                     decoration: BoxDecoration(
                       color: isMe
                           ? theme.colorScheme.primary
-                          : theme.colorScheme.surfaceVariant,
+                          : theme.colorScheme.surfaceContainerHighest,
                       borderRadius: BorderRadius.only(
                         topLeft: const Radius.circular(16),
                         topRight: const Radius.circular(16),
@@ -111,7 +111,7 @@ class _ChatViewPageState extends State<ChatViewPage> {
             decoration: BoxDecoration(
               color: theme.colorScheme.surface,
               border: Border(
-                  top: BorderSide(color: theme.colorScheme.surfaceVariant)),
+                  top: BorderSide(color: theme.colorScheme.surfaceContainerHighest)),
             ),
             child: Row(
               children: [
