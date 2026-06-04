@@ -1,0 +1,24 @@
+name: dexchats_passkey_service
+description: Cross-platform WebAuthn (passkey) implementation for DexChats
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.7.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  plugin_platform_interface: ^2.1.8
+
+flutter:
+  plugin:
+    platforms:
+      android:
+        package: com.dexchats.passkey
+        pluginClass: PasskeyPlugin
+      ios:
+        pluginClass: PasskeyPlugin
+      web:
+        pluginClass: PasskeyWeb
+        fileName: web/passkey_web.dart
