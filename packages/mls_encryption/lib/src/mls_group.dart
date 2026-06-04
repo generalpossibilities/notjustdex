@@ -45,10 +45,10 @@ class MlsGroup {
     );
   }
 
-  MlsMessage encryptMessage(
-      String senderId, String plaintext, Uint8List senderPrivateKey) {
+  Future<MlsMessage> encryptMessage(
+      String senderId, String plaintext, Uint8List senderPrivateKey) async {
     final encKey = MlsCrypto.deriveEncryptionKey(_groupSecret, 'handshake-$epoch');
-    final combined = MlsCrypto.hpkeEncrypt(
+    final combined = await MlsCrypto.hpkeEncrypt(
       Uint8List.fromList(utf8.encode(plaintext)),
       encKey,
       senderPrivateKey,
@@ -69,7 +69,7 @@ class MlsGroup {
     );
   }
 
-  String decryptMessage(MlsMessage message, Uint8List recipientPrivateKey) {
+  Future<String> decryptMessage(MlsMessage message, Uint8List recipientPrivateKey) async {
     if (message.epoch != epoch) {
       throw MlsException.decryptionFailed();
     }
@@ -88,7 +88,7 @@ class MlsGroup {
       throw MlsException.invalidSignature();
     }
 
-    final plaintext = MlsCrypto.hpkeDecrypt(
+    final plaintext = await MlsCrypto.hpkeDecrypt(
       message.ciphertext,
       recipientPrivateKey,
       sender.encryptionPublicKey,

@@ -84,9 +84,9 @@ class MlsKeyStore {
         _encryptionPublicKey = encryptionPublicKey,
         _signaturePublicKey = signaturePublicKey;
 
-  factory MlsKeyStore.generate(String userId) {
-    final (encPriv, encPub) = MlsCrypto.generateKeyPair();
-    final (sigPriv, sigPub) = MlsCrypto.generateKeyPair();
+  static Future<MlsKeyStore> generate(String userId) async {
+    final (encPriv, encPub) = await MlsCrypto.generateKeyPair();
+    final (sigPriv, sigPub) = await MlsCrypto.generateKeyPair();
 
     return MlsKeyStore(
       userId: userId,

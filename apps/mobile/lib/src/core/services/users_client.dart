@@ -85,7 +85,7 @@ class UsersClient {
       final uri = Uri.parse('$baseUrl/users/v1/avatar');
       final req = await client.postUrl(uri);
       final boundary = '----DexChatsBoundary${DateTime.now().millisecondsSinceEpoch}';
-      req.headers.contentType = ContentType('multipart', 'form-data', {'boundary': boundary});
+      req.headers.contentType = ContentType('multipart', 'form-data', parameters: {'boundary': boundary});
 
       final file = File(filePath);
       final bytes = await file.readAsBytes();

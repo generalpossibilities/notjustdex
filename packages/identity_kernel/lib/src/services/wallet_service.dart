@@ -22,7 +22,7 @@ class WalletService {
       if (walletData != null) {
         final identityRoot = sha256.convert(utf8.encode('dexchats_$identityId')).bytes;
         try {
-          await _chainClient!.registerIdentity(
+          await _chainClient.registerIdentity(
             username: wallet.username,
             publicKey: _getPublicKey(identityId),
             privateKey: _getPrivateKey(identityId),
@@ -48,7 +48,7 @@ class WalletService {
   Future<Map<String, int>> getBalances(String identityId) async {
     if (_chainClient != null) {
       final wallet = await getWallet(identityId);
-      return _chainClient!.getBalances(wallet.address);
+      return _chainClient.getBalances(wallet.address);
     }
     final balanceJson = await _repository.getBalance(identityId);
     final decoded = jsonDecode(balanceJson) as Map<String, dynamic>;
@@ -73,7 +73,7 @@ class WalletService {
     if (_chainClient != null) {
       try {
         final newIdentityRoot = sha256.convert(utf8.encode('rotated_$identityId')).bytes;
-        await _chainClient!.rotateSeedPhrase(
+        await _chainClient.rotateSeedPhrase(
           privateKey: _getPrivateKey(identityId),
           newIdentityRoot: newIdentityRoot,
         );
@@ -95,7 +95,7 @@ class WalletService {
     if (_chainClient == null) {
       throw WalletException('Chain client not available');
     }
-    await _chainClient!.postContentHash(
+    await _chainClient.postContentHash(
       privateKey: _getPrivateKey(identityId),
       contentHash: contentHash,
     );
@@ -105,7 +105,7 @@ class WalletService {
     if (_chainClient == null) {
       throw WalletException('Chain client not available');
     }
-    await _chainClient!.followUser(
+    await _chainClient.followUser(
       privateKey: _getPrivateKey(identityId),
       followeeAddress: followeeAddress,
     );

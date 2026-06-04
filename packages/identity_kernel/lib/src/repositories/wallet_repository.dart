@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:bip39/bip39.dart' as bip39;
 import 'package:crypto/crypto.dart';
-import 'package:cryptography/cryptography.dart';
+import 'package:cryptography/cryptography.dart' hide Hmac;
 import '../models/wallet.dart';
 import '../services/acki_nacki_client.dart';
 import 'wallet_repository_interface.dart';
@@ -19,7 +19,7 @@ class MpcWalletRepository implements WalletRepository {
   Future<Wallet> generateWallet(String identityId) async {
     final mnemonic = bip39.generateMnemonic(strength: 256);
     final seed = await bip39.mnemonicToSeed(mnemonic);
-    final masterKey = seed.bytes;
+    final masterKey = seed;
 
     final shares = _splitKey(masterKey, totalShares: 3, threshold: 2);
     final keyPair = await _ed25519KeyFromSeed(masterKey);
@@ -35,7 +35,7 @@ class MpcWalletRepository implements WalletRepository {
       cloudShare: shares[1],
       recoveryShare: shares[2],
       publicKeyBytes: pubKey.bytes,
-      privateKeyBytes: privKeyBytes!,
+      privateKeyBytes: privKeyBytes,
       seedHash: sha256.convert(utf8.encode(mnemonic)).toString(),
       seedVersion: 1,
     );
@@ -69,7 +69,7 @@ class MpcWalletRepository implements WalletRepository {
     if (data == null) throw WalletException('Wallet not found');
 
     final newMnemonic = bip39.generateMnemonic(strength: 256);
-    final newSeed = (await bip39.mnemonicToSeed(newMnemonic)).bytes;
+    final newSeed = await bip39.mnemonicToSeed(newMnemonic);
     final newShares = _splitKey(newSeed, totalShares: 3, threshold: 2);
     final newKeyPair = await _ed25519KeyFromSeed(newSeed);
     final newPubKey = await newKeyPair.extractPublicKey();
@@ -180,36 +180,6 @@ class MpcWalletRepository implements WalletRepository {
     return shares;
   }
 
-  List<int> _reconstructKey(List<String> shares, {required int threshold}) {
-    final points = shares
-        .asMap()
-        .entries
-        .take(threshold)
-        .map((e) => (x: e.key + 1, y: base64Url.decode(e.value)))
-        .toList();
-
-    final fieldSize = points.first.y.length;
-    final result = List<int>.filled(fieldSize, 0);
-
-    for (var i = 0; i < threshold; i++) {
-      var numerator = 1;
-      var denominator = 1;
-      for (var j = 0; j < threshold; j++) {
-        if (i == j) continue;
-        numerator = (numerator * -points[j].x) % 256;
-        denominator = (denominator * (points[i].x - points[j].x)) % 256;
-      }
-      if (denominator < 0) denominator += 256;
-      final lambda = (numerator * _modInverse(denominator, 256)) % 256;
-
-      for (var k = 0; k < fieldSize; k++) {
-        result[k] = (result[k] + points[i].y[k] * lambda) % 256;
-      }
-    }
-
-    return result;
-  }
-
   int _modInverse(int a, int m) {
     var t = 0, newT = 1, r = m, newR = a;
     while (newR != 0) {
@@ -279,12 +249,12 @@ class _WalletData {
   String cloudShare;
   String recoveryShare;
   String seedHash;
-  int seedVersion;
-  bool isInitialized;
-  bool isRecovering;
-  bool seedPhraseExported;
-  bool seedRotated;
-  String recoveryId;
+  int seedVersion = 1;
+  bool isInitialized = true;
+  bool isRecovering = false;
+  bool seedPhraseExported = false;
+  bool seedRotated = false;
+  String recoveryId = '';
   List<int> publicKeyBytes;
   List<int> privateKeyBytes;
 
@@ -298,11 +268,5 @@ class _WalletData {
     required this.seedHash,
     required this.publicKeyBytes,
     required this.privateKeyBytes,
-    this.seedVersion = 1,
-    this.isInitialized = true,
-    this.isRecovering = false,
-    this.seedPhraseExported = false,
-    this.seedRotated = false,
-    this.recoveryId = '',
   });
 }

@@ -2,57 +2,55 @@ import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
+import 'package:cryptography/cryptography.dart' as cryptography;
 import 'package:pointycastle/export.dart';
 
 /// Low-level MLS cryptographic primitives.
 ///
-/// Uses X25519 for key exchange, Ed25519 for signatures,
-/// and AES-256-GCM for symmetric encryption (HPKE).
+/// Uses X25519 for key exchange (via `cryptography` package),
+/// Ed25519 for signatures, and AES-256-GCM for symmetric encryption (HPKE).
 class MlsCrypto {
   static final SecureRandom _rng = FortunaRandom()
     ..seed(KeyParameter(_generateSeed()));
 
   /// Generate a new X25519 key pair for TreeKEM.
-  static (Uint8List privateKey, Uint8List publicKey) generateKeyPair() {
-    final keyGen = X25519KeyGenerator()
-      ..init(ParametersWithRandom(
-        X25519KeyGeneratorParameters(),
-        _rng,
-      ));
-
-    final pair = keyGen.generateKeyPair();
-    final priv = (pair.privateKey as X25519PrivateKey).x;
-    final pub = (pair.publicKey as X25519PublicKey).x;
-
-    return (Uint8List.fromList(priv), Uint8List.fromList(pub));
+  static Future<(Uint8List privateKey, Uint8List publicKey)> generateKeyPair() async {
+    final x25519 = cryptography.X25519();
+    final keyPair = await x25519.newKeyPair();
+    final priv = await keyPair.extractPrivateKeyBytes();
+    final pub = await keyPair.extractPublicKey();
+    return (Uint8List.fromList(priv), Uint8List.fromList(pub.bytes));
   }
 
   /// Derive a shared secret using X25519 Diffie-Hellman.
-  static Uint8List deriveSharedSecret(
+  static Future<Uint8List> deriveSharedSecret(
     Uint8List privateKey,
     Uint8List publicKey,
-  ) {
-    final priv = X25519PrivateKey(privateKey.bytes.toList());
-    final pub = X25519PublicKey(publicKey.bytes.toList());
-    final agreement = X25519Agreement();
-    agreement.init(priv);
-    return Uint8List.fromList(
-      agreement.calculateSharedSecret(pub) as List<int>,
+  ) async {
+    final x25519 = cryptography.X25519();
+    final sharedSecret = await x25519.sharedSecretKey(
+      keyPair: cryptography.SimpleKeyPairData(
+        privateKey,
+        publicKey: cryptography.SimplePublicKey(publicKey, type: KeyPairType.x25519),
+        type: KeyPairType.x25519,
+      ),
+      remotePublicKey: cryptography.SimplePublicKey(publicKey, type: KeyPairType.x25519),
     );
+    return Uint8List.fromList(sharedSecret.bytes);
   }
 
   /// HPKE: Hybrid Public Key Encryption
-  static HpkeCiphertext hpkeEncrypt(
+  static Future<HpkeCiphertext> hpkeEncrypt(
     Uint8List plaintext,
     Uint8List recipientPublicKey,
     Uint8List senderPrivateKey,
-  ) {
-    final sharedSecret = deriveSharedSecret(senderPrivateKey, recipientPublicKey);
+  ) async {
+    final sharedSecret = await deriveSharedSecret(senderPrivateKey, recipientPublicKey);
     final aesKey = sha256.convert(sharedSecret).bytes.sublist(0, 32);
     final nonce = Uint8List.fromList(
       List<int>.generate(12, (_) => _rng.nextUint8()),
     );
-    final (_, encPub) = generateKeyPair();
+    final (_, encPub) = await generateKeyPair();
 
     final cipher = AESEngine()
       ..init(true, KeyParameter(Uint8List.fromList(aesKey)));
@@ -78,12 +76,12 @@ class MlsCrypto {
   }
 
   /// HPKE: Decrypt
-  static Uint8List hpkeDecrypt(
+  static Future<Uint8List> hpkeDecrypt(
     HpkeCiphertext ciphertext,
     Uint8List recipientPrivateKey,
     Uint8List senderPublicKey,
-  ) {
-    final sharedSecret = deriveSharedSecret(
+  ) async {
+    final sharedSecret = await deriveSharedSecret(
       recipientPrivateKey,
       ciphertext.encapsulatedKey,
     );
@@ -107,7 +105,7 @@ class MlsCrypto {
     final len = gcm.processBytes(combined, 0, combined.length, result, 0);
     gcm.doFinal(result, len);
 
-    return result.sublist(0, len) as Uint8List;
+    return result.sublist(0, len);
   }
 
   /// Ed25519 signature (HMAC-SHA256 based for simplicity).

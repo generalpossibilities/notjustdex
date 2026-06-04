@@ -54,9 +54,13 @@ class _ProfileTabContentState extends State<_ProfileTabContent> {
     super.initState();
   }
 
+  Future<void> _loadProfile() async {
+    // In production: fetch from UsersClient
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(title: const Text('Profile')),
       body: RefreshIndicator(
