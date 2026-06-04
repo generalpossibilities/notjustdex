@@ -16,11 +16,10 @@ import '../exceptions.dart';
 ///   3. Recovery share: derived from the 24-word seed phrase
 ///
 /// Any 2 of 3 shares can sign a transaction (2-of-3 threshold).
-class WalletRepository {
+class MpcWalletRepository {
   final Map<String, _WalletData> _wallets = {};
   final Map<String, String> _passwords = {};
 
-  @override
   Future<Wallet> generateWallet(String identityId) async {
     // 1. Generate 24-word seed phrase
     final seed = SeedPhrase.generate();
@@ -50,21 +49,18 @@ class WalletRepository {
     return _toWallet(walletData);
   }
 
-  @override
   Future<Wallet?> getWallet(String identityId) async {
     final data = _wallets[identityId];
     if (data == null) return null;
     return _toWallet(data);
   }
 
-  @override
   Future<bool> verifyPassword(String identityId, String password) async {
     final hash = _passwords[identityId];
     if (hash == null) return false;
     return sha256.convert(utf8.encode(password)).toString() == hash;
   }
 
-  @override
   Future<String> exportMnemonic(String identityId) async {
     final data = _wallets[identityId];
     if (data == null) throw WalletException('Wallet not found');
@@ -77,7 +73,6 @@ class WalletRepository {
     return seed;
   }
 
-  @override
   Future<void> rotateSeedPhrase(String identityId) async {
     final data = _wallets[identityId];
     if (data == null) throw WalletException('Wallet not found');
@@ -93,7 +88,6 @@ class WalletRepository {
     data.seedRotated = true;
   }
 
-  @override
   Future<void> initiateRecovery(String identityId) async {
     final data = _wallets[identityId];
     if (data == null) throw WalletException('Wallet not found');
@@ -101,7 +95,6 @@ class WalletRepository {
     data.recoveryId = 'recovery_${DateTime.now().millisecondsSinceEpoch}';
   }
 
-  @override
   Future<bool> completeRecovery(String identityId, String confirmationCode) async {
     final data = _wallets[identityId];
     if (data == null) throw WalletException('Wallet not found');
@@ -115,7 +108,6 @@ class WalletRepository {
     return false;
   }
 
-  @override
   Future<String> getBalance(String identityId) async {
     final data = _wallets[identityId];
     if (data == null) throw WalletException('Wallet not found');
@@ -128,7 +120,6 @@ class WalletRepository {
     return '{"DEX": "$dex", "USDC": "$usdc"}';
   }
 
-  @override
   Stream<Wallet> watchWallet(String identityId) {
     return Stream.periodic(const Duration(seconds: 30), (_) {
       final data = _wallets[identityId];

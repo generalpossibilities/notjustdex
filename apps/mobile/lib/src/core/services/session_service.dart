@@ -1,5 +1,3 @@
-import 'dart:convert';
-import 'dart:io';
 import 'package:flutter/foundation.dart';
 
 /// Manages JWT session persistence and offline caching.
@@ -11,7 +9,6 @@ class SessionService {
   String? _username;
   String? _displayName;
   String? _phoneNumber;
-  DateTime? _lastSync;
 
   bool get isLoggedIn => _token != null;
   String? get token => _token;
@@ -42,7 +39,6 @@ class SessionService {
     _username = username;
     _displayName = displayName;
     _phoneNumber = phoneNumber;
-    _lastSync = DateTime.now();
 
     // In production: encrypt and persist to flutter_secure_storage
     debugPrint('[Session] Saved session for $username');
@@ -55,7 +51,6 @@ class SessionService {
     _username = null;
     _displayName = null;
     _phoneNumber = null;
-    _lastSync = null;
 
     // In production: clear secure storage
     debugPrint('[Session] Cleared session');

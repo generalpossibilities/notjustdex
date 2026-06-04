@@ -14,7 +14,6 @@ class VerificationPage extends StatefulWidget {
 class _VerificationPageState extends State<VerificationPage> {
   final _codeController = TextEditingController();
   bool _isVerifying = false;
-  bool _autoVerified = false;
   int _resendCountdown = 30;
   Timer? _countdownTimer;
   String _errorMessage = '';
@@ -139,7 +138,7 @@ class _VerificationPageState extends State<VerificationPage> {
       return;
     }
 
-    setState(() => _autoVerified = true);
+    if (!mounted) return;
     context.push('/onboarding/username', extra: widget.phoneNumber);
   }
 }

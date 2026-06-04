@@ -1,8 +1,7 @@
-import 'package:equatable/equatable.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:json_annotation/json_annotation.dart';
 import 'authentication_method.dart';
 import 'profile.dart';
+import 'username.dart';
 import 'wallet.dart';
 
 part 'user_identity.freezed.dart';

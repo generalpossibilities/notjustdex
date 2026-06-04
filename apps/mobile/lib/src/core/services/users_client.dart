@@ -91,19 +91,14 @@ class UsersClient {
       final bytes = await file.readAsBytes();
       final name = file.uri.pathSegments.last;
 
-      final body = StringBuffer()
-        ..writeln('--$boundary')
-        ..writeln('Content-Disposition: form-data; name="user_id"')
-        ..writeln()
-        ..writeln(userId)
-        ..writeln('--$boundary')
-        ..writeln('Content-Disposition: form-data; name="avatar"; filename="$name"')
-        ..writeln('Content-Type: image/jpeg')
-        ..writeln()
-        ..write(utf8.decode(bytes)); // Simplified — in production use multipart properly
-
-      req.write(body.toString());
-      req.writeln('--$boundary--');
+      req.write('--$boundary\r\n'
+          'Content-Disposition: form-data; name="user_id"\r\n\r\n'
+          '$userId\r\n'
+          '--$boundary\r\n'
+          'Content-Disposition: form-data; name="avatar"; filename="$name"\r\n'
+          'Content-Type: image/jpeg\r\n\r\n');
+      req.add(bytes);
+      req.write('\r\n--$boundary--\r\n');
 
       final res = await req.close();
       final resBody = await res.transform(utf8.decoder).join();

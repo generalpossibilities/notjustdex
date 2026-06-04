@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import '../core/modules/app_module.dart';
 
 class HomeShell extends StatefulWidget {

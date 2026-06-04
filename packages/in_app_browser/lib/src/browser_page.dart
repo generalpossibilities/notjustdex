@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 import 'deep_link_handler.dart';
@@ -23,13 +22,11 @@ class _BrowserPageState extends State<BrowserPage> {
   double _progress = 0;
   bool _canGoBack = false;
   bool _canGoForward = false;
-  String _currentUrl = '';
   final _urlController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _currentUrl = widget.initialUrl;
     _urlController.text = widget.initialUrl;
 
     _controller = WebViewController()
@@ -46,16 +43,18 @@ class _BrowserPageState extends State<BrowserPage> {
           onPageStarted: (url) {
             if (!mounted) return;
             setState(() {
-              _currentUrl = url;
               _urlController.text = url;
             });
           },
-          onPageFinished: (url) {
+          onPageFinished: (url) async {
+            if (!mounted) return;
+            final canGoBack = await _controller.canGoBack();
+            final canGoForward = await _controller.canGoForward();
             if (!mounted) return;
             setState(() {
               _isLoading = false;
-              _canGoBack = _controller.canGoBack();
-              _canGoForward = _controller.canGoForward();
+              _canGoBack = canGoBack;
+              _canGoForward = canGoForward;
             });
           },
           onNavigationRequest: (request) {
@@ -130,7 +129,7 @@ class _BrowserPageState extends State<BrowserPage> {
           if (_isLoading)
             LinearProgressIndicator(
               value: _progress,
-              backgroundColor: theme.colorScheme.surfaceVariant,
+              backgroundColor: theme.colorScheme.surfaceContainerHighest,
             ),
           Expanded(child: WebViewWidget(controller: _controller)),
           _buildBottomNav(theme),
@@ -144,7 +143,7 @@ class _BrowserPageState extends State<BrowserPage> {
       height: 32,
       padding: const EdgeInsets.symmetric(horizontal: 8),
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceVariant,
+        color: theme.colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
       ),
       child: TextField(

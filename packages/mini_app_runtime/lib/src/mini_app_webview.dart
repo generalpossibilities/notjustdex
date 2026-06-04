@@ -61,7 +61,6 @@ class _MiniAppWebViewState extends State<MiniAppWebView> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.app.name),

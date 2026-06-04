@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import '../core/services/users_client.dart';
 
 class ProfileSettingsPage extends StatefulWidget {
@@ -20,13 +19,6 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
   // In production: injected via DI
   final _usersClient = UsersClient();
   String _userId = 'user_demo_id';
-
-  static final _mockSeed24 = [
-    'abandon', 'ability', 'able', 'about', 'above', 'absent',
-    'absorb', 'abstract', 'absurd', 'abuse', 'access', 'accident',
-    'account', 'accuse', 'achieve', 'acid', 'acoustic', 'acquire',
-    'across', 'act', 'action', 'actor', 'actress', 'actual',
-  ];
 
   @override
   void dispose() {

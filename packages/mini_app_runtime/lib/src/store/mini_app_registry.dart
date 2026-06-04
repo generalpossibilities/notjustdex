@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import '../models/mini_app.dart';
+import '../models/permission.dart';
 
 class MiniAppRegistry extends ChangeNotifier {
   final List<MiniApp> _installed = [];
@@ -78,8 +79,6 @@ class MiniAppRegistry extends ChangeNotifier {
   MiniApp? getById(String appId) {
     return _installed.where((e) => e.id == appId).firstOrNull;
   }
-
-  String _storageKey = 'mini_app_installed';
 
   String serialize() {
     final ids = _installed.map((e) => e.id).toList();

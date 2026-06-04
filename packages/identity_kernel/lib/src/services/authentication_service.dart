@@ -1,5 +1,4 @@
 import 'dart:async';
-import '../models/authentication_method.dart';
 
 enum AuthChallenge {
   phone,

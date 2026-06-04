@@ -13,7 +13,6 @@ import 'src/core/modules/chat_module.dart';
 import 'src/core/modules/discover_module.dart';
 import 'src/core/modules/notifications_module.dart';
 import 'src/core/modules/profile_module.dart';
-import 'src/core/config/features.dart';
 import 'src/core/services/session_service.dart';
 
 void main() {

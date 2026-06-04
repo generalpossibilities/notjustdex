@@ -195,7 +195,6 @@ class PhoneEntryPage extends StatefulWidget {
 class _PhoneEntryPageState extends State<PhoneEntryPage> {
   final _phoneController = TextEditingController();
   late CountryCode _selectedCountry;
-  bool _isSearching = false;
   List<CountryCode> _filteredCountries = CountryCode.all;
 
   @override
@@ -313,7 +312,6 @@ class _PhoneEntryPageState extends State<PhoneEntryPage> {
                 ),
                 onChanged: (v) {
                   setSheetState(() {
-                    _isSearching = v.isNotEmpty;
                     _filteredCountries = CountryCode.all.where((c) =>
                       c.name.toLowerCase().contains(v.toLowerCase()) ||
                       c.code.contains(v),
@@ -331,7 +329,7 @@ class _PhoneEntryPageState extends State<PhoneEntryPage> {
                       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                       child: Text(
                         '${_filteredCountries.length} countries',
-                        style: theme.textTheme.labelSmall,
+                        style: Theme.of(ctx).textTheme.labelSmall,
                       ),
                     );
                   }
@@ -339,7 +337,7 @@ class _PhoneEntryPageState extends State<PhoneEntryPage> {
                   return ListTile(
                     leading: Text(c.flag, style: const TextStyle(fontSize: 24)),
                     title: Text(c.name, style: const TextStyle(fontSize: 14)),
-                    trailing: Text(c.code, style: TextStyle(color: theme.colorScheme.onSurfaceVariant)),
+                    trailing: Text(c.code, style: TextStyle(color: Theme.of(ctx).colorScheme.onSurfaceVariant)),
                     onTap: () {
                       setState(() => _selectedCountry = c);
                       Navigator.pop(ctx);

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'app_module.dart';
 import '../../settings/profile_settings_page.dart';
-import '../services/users_client.dart';
+
 
 class ProfileModule extends AppModule {
   @override
@@ -48,23 +48,10 @@ class _ProfileTabContentState extends State<_ProfileTabContent> {
   String _username = '@username';
   String _displayName = 'Display Name';
   String? _avatarUrl;
-  bool _isLoading = false;
 
   @override
   void initState() {
     super.initState();
-    _loadProfile();
-  }
-
-  Future<void> _loadProfile() async {
-    setState(() => _isLoading = true);
-    try {
-      // In production: get user ID from stored JWT, fetch from UsersClient
-      // Stub: simulate fetch
-      await Future.delayed(const Duration(milliseconds: 300));
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
   }
 
   @override

@@ -21,6 +21,7 @@ jobs:
           channel: stable
           flutter-version: 3.29.x
       - uses: bluefireteam/melos-action@v3
+      - run: melos run gen
       - run: melos run analyze
       - run: melos run test
 

@@ -21,7 +21,6 @@ class PasskeyService {
     //   3. Return (credentialId, publicKey)
     //
     // Stub: simulate a successful credential creation.
-    final challenge = options['publicKey']['challenge'] as String;
     final mockId = base64Encode(utf8.encode('mock_passkey_$userId'));
     final mockKey = base64Encode(utf8.encode(
       '{"kty":"EC","crv":"P-256","x":"mock_x","y":"mock_y"}',
