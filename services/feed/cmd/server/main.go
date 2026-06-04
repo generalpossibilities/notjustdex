@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/dexchats/feed/internal/handler"
+	"github.com/dexchats/feed/internal/models"
 	"github.com/dexchats/feed/internal/repository"
 	"github.com/dexchats/feed/internal/service"
 )

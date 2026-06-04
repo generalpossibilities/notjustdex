@@ -1,5 +1,5 @@
 import 'package:test/test.dart';
-import 'package:dexchats_identity_kernel/identity_kernel.dart';
+import 'package:dexchats_identity_kernel/src/models/username.dart';
 
 void main() {
   group('Username', () {

@@ -10,5 +10,6 @@ dependencies:
   grpc: ^4.0.0
 
 dev_dependencies:
+  test: ^1.25.8
   build_runner: ^2.4.0
   protoc_plugin: ^22.0.0

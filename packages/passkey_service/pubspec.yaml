@@ -22,3 +22,6 @@ flutter:
       web:
         pluginClass: PasskeyWeb
         fileName: web/passkey_web.dart
+
+dev_dependencies:
+  test: ^1.25.8
