@@ -35,7 +35,7 @@ class IdentityBloc extends Bloc<IdentityEvent, IdentityState> {
       );
 
       if (_walletService != null) {
-        final wallet = await _walletService..initializeWallet(identity.id);
+        final wallet = await _walletService.initializeWallet(identity.id);
         emit(IdentityAuthenticated(identity.copyWith(wallet: wallet)));
       } else {
         emit(IdentityAuthenticated(identity));
@@ -54,7 +54,7 @@ class IdentityBloc extends Bloc<IdentityEvent, IdentityState> {
       final identity = await _identityService.getIdentity(event.identityId);
 
       if (_walletService != null) {
-        final wallet = await _walletService..getWallet(identity.id);
+        final wallet = await _walletService.getWallet(identity.id);
         emit(IdentityAuthenticated(identity.copyWith(wallet: wallet)));
       } else {
         emit(IdentityAuthenticated(identity));

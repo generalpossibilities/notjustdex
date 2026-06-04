@@ -61,6 +61,7 @@ class _ProfileTabContentState extends State<_ProfileTabContent> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(title: const Text('Profile')),
       body: RefreshIndicator(

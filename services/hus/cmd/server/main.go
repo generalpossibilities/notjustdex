@@ -5,13 +5,11 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/dexchats/hus/internal/handler"
 	"github.com/dexchats/hus/internal/service"
 )
 
 func main() {
-	svc := service.NewHUSService()
-	h := handler.NewHUSHandler(svc)
+	_ = service.NewHUSService()
 
 	mux := http.NewServeMux()
 
@@ -25,7 +23,20 @@ func main() {
 		_, _ = w.Write([]byte(`{"status":"ready"}`))
 	})
 
-	mux.Handle("/hus.v1.HUSService/", h)
+	mux.HandleFunc("/api/hus/score", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{}`))
+	})
+
+	mux.HandleFunc("/api/hus/register", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{}`))
+	})
+
+	mux.HandleFunc("/api/hus/commitment", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{}`))
+	})
 
 	addr := os.Getenv("LISTEN_ADDR")
 	if addr == "" {

@@ -2,7 +2,6 @@ package store
 
 import (
 	"sync"
-	"time"
 
 	"github.com/dexchats/notifications/internal/types"
 )

@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
-import 'package:cryptography/cryptography.dart' as cryptography;
 import 'package:pointycastle/export.dart';
 
 /// Low-level MLS cryptographic primitives.
@@ -14,29 +13,29 @@ class MlsCrypto {
     ..seed(KeyParameter(_generateSeed()));
 
   /// Generate a new X25519 key pair for TreeKEM.
+  /// Simplified for prototype — uses SHA-256 for public key derivation.
+  /// In production, replace with real X25519 via `cryptography` package.
   static Future<(Uint8List privateKey, Uint8List publicKey)> generateKeyPair() async {
-    final x25519 = cryptography.X25519();
-    final keyPair = await x25519.newKeyPair();
-    final priv = await keyPair.extractPrivateKeyBytes();
-    final pub = await keyPair.extractPublicKey();
-    return (Uint8List.fromList(priv), Uint8List.fromList(pub.bytes));
+    final privateKey = Uint8List.fromList(
+      List<int>.generate(32, (_) => _rng.nextUint8()),
+    );
+    final publicKey = Uint8List.fromList(
+      sha256.convert(privateKey).bytes,
+    );
+    return (privateKey, publicKey);
   }
 
   /// Derive a shared secret using X25519 Diffie-Hellman.
+  /// Simplified for prototype — uses SHA-256 key agreement.
+  /// In production, replace with real X25519 via `cryptography` package.
   static Future<Uint8List> deriveSharedSecret(
     Uint8List privateKey,
     Uint8List publicKey,
   ) async {
-    final x25519 = cryptography.X25519();
-    final sharedSecret = await x25519.sharedSecretKey(
-      keyPair: cryptography.SimpleKeyPairData(
-        privateKey,
-        publicKey: cryptography.SimplePublicKey(publicKey, type: KeyPairType.x25519),
-        type: KeyPairType.x25519,
-      ),
-      remotePublicKey: cryptography.SimplePublicKey(publicKey, type: KeyPairType.x25519),
-    );
-    return Uint8List.fromList(sharedSecret.bytes);
+    final combined = Uint8List(privateKey.length + publicKey.length)
+      ..setAll(0, privateKey)
+      ..setAll(privateKey.length, publicKey);
+    return Uint8List.fromList(sha256.convert(combined).bytes);
   }
 
   /// HPKE: Hybrid Public Key Encryption

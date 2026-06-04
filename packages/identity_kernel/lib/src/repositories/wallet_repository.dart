@@ -37,7 +37,6 @@ class MpcWalletRepository implements WalletRepository {
       publicKeyBytes: pubKey.bytes,
       privateKeyBytes: privKeyBytes,
       seedHash: sha256.convert(utf8.encode(mnemonic)).toString(),
-      seedVersion: 1,
     );
 
     _wallets[identityId] = walletData;
@@ -82,7 +81,7 @@ class MpcWalletRepository implements WalletRepository {
     data.cloudShare = newShares[1];
     data.recoveryShare = newShares[2];
     data.publicKeyBytes = newPubKey.bytes;
-    data.privateKeyBytes = newPrivKey!;
+    data.privateKeyBytes = newPrivKey;
     data.seedHash = sha256.convert(utf8.encode(newMnemonic)).toString();
     data.seedVersion += 1;
     data.seedRotated = true;
@@ -178,18 +177,6 @@ class MpcWalletRepository implements WalletRepository {
     }
 
     return shares;
-  }
-
-  int _modInverse(int a, int m) {
-    var t = 0, newT = 1, r = m, newR = a;
-    while (newR != 0) {
-      final quotient = r ~/ newR;
-      (t, newT) = (newT, t - quotient * newT);
-      (r, newR) = (newR, r - quotient * newR);
-    }
-    if (r > 1) return 1;
-    if (t < 0) t += m;
-    return t;
   }
 
   Future<SimpleKeyPair> _ed25519KeyFromSeed(List<int> seed) async {

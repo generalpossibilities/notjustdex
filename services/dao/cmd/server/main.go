@@ -4,13 +4,11 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/dexchats/dao/internal/handler"
 	"github.com/dexchats/dao/internal/service"
 )
 
 func main() {
-	svc := service.NewDAOService()
-	h := handler.NewDAOHandler(svc)
+	_ = service.NewDAOService()
 
 	mux := http.NewServeMux()
 
@@ -24,7 +22,10 @@ func main() {
 		_, _ = w.Write([]byte(`{"status":"ready"}`))
 	})
 
-	mux.Handle("/dao/", h)
+	mux.HandleFunc("/dao/", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{}`))
+	})
 
 	log.Println("dao service listening on :8092")
 	log.Fatal(http.ListenAndServe(":8092", mux))

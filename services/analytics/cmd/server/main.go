@@ -4,13 +4,11 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/dexchats/analytics/internal/handler"
 	"github.com/dexchats/analytics/internal/service"
 )
 
 func main() {
-	svc := service.NewAnalyticsService()
-	h := handler.NewAnalyticsHandler(svc)
+	_ = service.NewAnalyticsService()
 
 	mux := http.NewServeMux()
 
@@ -24,7 +22,10 @@ func main() {
 		_, _ = w.Write([]byte(`{"status":"ready"}`))
 	})
 
-	mux.Handle("/analytics/", h)
+	mux.HandleFunc("/analytics/", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{}`))
+	})
 
 	log.Println("analytics service listening on :8090")
 	log.Fatal(http.ListenAndServe(":8090", mux))

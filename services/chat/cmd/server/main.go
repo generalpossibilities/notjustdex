@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/dexchats/chat/internal/handler"
 	"github.com/dexchats/chat/internal/service"
 	"github.com/dexchats/chat/internal/store"
 	"github.com/dexchats/chat/internal/ws"
@@ -16,7 +15,6 @@ func main() {
 	st := store.NewMemoryStore()
 	svc := service.NewChatService(st)
 	hub := ws.NewHub(svc)
-	h := handler.NewChatHandler(svc, hub)
 
 	mux := http.NewServeMux()
 
@@ -63,8 +61,6 @@ func main() {
 		messages := svc.GetMessages(convID, 50, 0)
 		_ = json.NewEncoder(w).Encode(messages)
 	})
-
-	mux.Handle("/chat.v1.ChatService/", h)
 
 	addr := os.Getenv("LISTEN_ADDR")
 	if addr == "" {
