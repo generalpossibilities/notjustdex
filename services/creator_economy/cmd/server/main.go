@@ -16,12 +16,12 @@ func main() {
 
 	mux.HandleFunc("/health/live", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status":"alive"}`))
+		_, _ = w.Write([]byte(`{"status":"alive"}`))
 	})
 
 	mux.HandleFunc("/health/ready", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status":"ready"}`))
+		_, _ = w.Write([]byte(`{"status":"ready"}`))
 	})
 
 	mux.HandleFunc("/api/creator/tip", func(w http.ResponseWriter, r *http.Request) {
@@ -43,7 +43,7 @@ func main() {
 		}
 		tip := svc.SendTip(req.From, req.To, req.Amount, req.Token, req.ContentID, req.Message)
 		w.WriteHeader(http.StatusCreated)
-		json.NewEncoder(w).Encode(tip)
+		_ = json.NewEncoder(w).Encode(tip)
 	})
 
 	mux.HandleFunc("/api/creator/subscribe", func(w http.ResponseWriter, r *http.Request) {
@@ -64,7 +64,7 @@ func main() {
 		}
 		sub := svc.Subscribe(req.SubscriberID, req.CreatorID, req.Tier, req.Price, req.Token)
 		w.WriteHeader(http.StatusCreated)
-		json.NewEncoder(w).Encode(sub)
+		_ = json.NewEncoder(w).Encode(sub)
 	})
 
 	addr := os.Getenv("LISTEN_ADDR")

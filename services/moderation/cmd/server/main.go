@@ -20,12 +20,12 @@ func main() {
 
 	mux.HandleFunc("/health/live", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status":"alive"}`))
+		_, _ = w.Write([]byte(`{"status":"alive"}`))
 	})
 
 	mux.HandleFunc("/health/ready", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status":"ready"}`))
+		_, _ = w.Write([]byte(`{"status":"ready"}`))
 	})
 
 	// Content moderation endpoint — called at upload time
@@ -74,7 +74,7 @@ func main() {
 		}
 
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(result)
+		_ = json.NewEncoder(w).Encode(result)
 	})
 
 	// Report endpoint — user reports content
@@ -108,7 +108,7 @@ func main() {
 	// Pending reports for human review queue
 	mux.HandleFunc("/api/moderation/pending", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(reportStore.GetPending())
+		_ = json.NewEncoder(w).Encode(reportStore.GetPending())
 	})
 
 	addr := os.Getenv("LISTEN_ADDR")

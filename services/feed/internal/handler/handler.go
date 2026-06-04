@@ -41,7 +41,7 @@ func (h *FeedHandler) getFeed(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := h.svc.GetFeed(userID, cursor, limit)
-	json.NewEncoder(w).Encode(resp)
+	_ = json.NewEncoder(w).Encode(resp)
 }
 
 func (h *FeedHandler) createPost(w http.ResponseWriter, r *http.Request) {
@@ -53,5 +53,5 @@ func (h *FeedHandler) createPost(w http.ResponseWriter, r *http.Request) {
 
 	item := h.svc.CreatePost(&req)
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(item)
+	_ = json.NewEncoder(w).Encode(item)
 }

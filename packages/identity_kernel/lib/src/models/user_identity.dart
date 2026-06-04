@@ -11,7 +11,7 @@ part 'user_identity.g.dart';
 class UserIdentity with _$UserIdentity {
   const factory UserIdentity({
     required String id,
-    required Username username,
+    @UsernameConverter() required Username username,
     required Profile profile,
     required Wallet wallet,
     required List<AuthenticationMethod> authMethods,

@@ -65,7 +65,7 @@ func (h *AuthHandler) registerPhone(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"user_id":  user.ID,
 		"username": user.Username,
 	})
@@ -91,7 +91,7 @@ func (h *AuthHandler) loginPhone(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewEncoder(w).Encode(map[string]string{"token": token})
+	_ = json.NewEncoder(w).Encode(map[string]string{"token": token})
 }
 
 // ─── Passkey ────────────────────────────────────────────────────
@@ -117,7 +117,7 @@ func (h *AuthHandler) beginPasskeyRegister(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	json.NewEncoder(w).Encode(options)
+	_ = json.NewEncoder(w).Encode(options)
 }
 
 func (h *AuthHandler) finishPasskeyRegister(w http.ResponseWriter, r *http.Request) {
@@ -141,7 +141,7 @@ func (h *AuthHandler) finishPasskeyRegister(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+	_ = json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
 }
 
 func (h *AuthHandler) beginPasskeyAuth(w http.ResponseWriter, r *http.Request) {
@@ -164,7 +164,7 @@ func (h *AuthHandler) beginPasskeyAuth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewEncoder(w).Encode(options)
+	_ = json.NewEncoder(w).Encode(options)
 }
 
 func (h *AuthHandler) finishPasskeyAuth(w http.ResponseWriter, r *http.Request) {
@@ -188,7 +188,7 @@ func (h *AuthHandler) finishPasskeyAuth(w http.ResponseWriter, r *http.Request) 
 		return
 	}
 
-	json.NewEncoder(w).Encode(map[string]string{"token": token})
+	_ = json.NewEncoder(w).Encode(map[string]string{"token": token})
 }
 
 // ─── Wallet ZKP ─────────────────────────────────────────────────
@@ -213,7 +213,7 @@ func (h *AuthHandler) createChallenge(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"challenge_id": chal.ID,
 		"message":      chal.Message,
 	})
@@ -237,7 +237,7 @@ func (h *AuthHandler) verifyZKP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewEncoder(w).Encode(map[string]string{"token": token})
+	_ = json.NewEncoder(w).Encode(map[string]string{"token": token})
 }
 
 func (h *AuthHandler) linkWallet(w http.ResponseWriter, r *http.Request) {
@@ -260,7 +260,7 @@ func (h *AuthHandler) linkWallet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+	_ = json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
 }
 
 // ─── Validate ───────────────────────────────────────────────────
@@ -291,5 +291,5 @@ func (h *AuthHandler) validateToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewEncoder(w).Encode(user)
+	_ = json.NewEncoder(w).Encode(user)
 }

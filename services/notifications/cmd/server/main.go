@@ -22,12 +22,12 @@ func main() {
 
 	mux.HandleFunc("/health/live", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status":"alive"}`))
+		_, _ = w.Write([]byte(`{"status":"alive"}`))
 	})
 
 	mux.HandleFunc("/health/ready", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status":"ready"}`))
+		_, _ = w.Write([]byte(`{"status":"ready"}`))
 	})
 
 	// WebSocket for real-time notifications
@@ -52,7 +52,7 @@ func main() {
 			}
 			notifs := st.GetNotifications(userID, limit, offset)
 			unread := st.UnreadCount(userID)
-			json.NewEncoder(w).Encode(types.NotificationResponse{
+			_ = json.NewEncoder(w).Encode(types.NotificationResponse{
 				Notifications: notifs,
 				UnreadCount:   unread,
 			})
@@ -68,7 +68,7 @@ func main() {
 			req.Read = false
 			notifHub.Deliver(&req)
 			w.WriteHeader(http.StatusCreated)
-			json.NewEncoder(w).Encode(req)
+			_ = json.NewEncoder(w).Encode(req)
 
 		default:
 			http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
@@ -133,7 +133,7 @@ func main() {
 		}
 		notifHub.Deliver(notif)
 		w.WriteHeader(http.StatusCreated)
-		json.NewEncoder(w).Encode(notif)
+		_ = json.NewEncoder(w).Encode(notif)
 	})
 
 	addr := os.Getenv("LISTEN_ADDR")

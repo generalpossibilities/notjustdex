@@ -22,12 +22,12 @@ func main() {
 
 	mux.HandleFunc("/health/live", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status":"alive"}`))
+		_, _ = w.Write([]byte(`{"status":"alive"}`))
 	})
 
 	mux.HandleFunc("/health/ready", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status":"ready"}`))
+		_, _ = w.Write([]byte(`{"status":"ready"}`))
 	})
 
 	mux.HandleFunc("/ws", hub.HandleWS)
@@ -35,7 +35,7 @@ func main() {
 	mux.HandleFunc("/api/conversations", func(w http.ResponseWriter, r *http.Request) {
 		userID := r.URL.Query().Get("user_id")
 		convs := svc.GetConversations(userID)
-		json.NewEncoder(w).Encode(convs)
+		_ = json.NewEncoder(w).Encode(convs)
 	})
 
 	mux.HandleFunc("/api/conversations/create", func(w http.ResponseWriter, r *http.Request) {
@@ -55,13 +55,13 @@ func main() {
 			Type:           input.Type,
 			ParticipantIDs: input.ParticipantIDs,
 		})
-		json.NewEncoder(w).Encode(conv)
+		_ = json.NewEncoder(w).Encode(conv)
 	})
 
 	mux.HandleFunc("/api/messages", func(w http.ResponseWriter, r *http.Request) {
 		convID := r.URL.Query().Get("conversation_id")
 		messages := svc.GetMessages(convID, 50, 0)
-		json.NewEncoder(w).Encode(messages)
+		_ = json.NewEncoder(w).Encode(messages)
 	})
 
 	mux.Handle("/chat.v1.ChatService/", h)

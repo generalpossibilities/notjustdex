@@ -76,7 +76,7 @@ func (h *UserHandler) createUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"user":   user,
 		"wallet": wallet,
 	})
@@ -100,7 +100,7 @@ func (h *UserHandler) getUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewEncoder(w).Encode(user)
+	_ = json.NewEncoder(w).Encode(user)
 }
 
 func (h *UserHandler) checkUsername(w http.ResponseWriter, r *http.Request) {
@@ -112,7 +112,7 @@ func (h *UserHandler) checkUsername(w http.ResponseWriter, r *http.Request) {
 	username := r.URL.Query().Get("username")
 	available := h.svc.CheckUsernameAvailability(username)
 
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"username":   username,
 		"available":  available,
 	})
@@ -146,7 +146,7 @@ func (h *UserHandler) updateProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewEncoder(w).Encode(user)
+	_ = json.NewEncoder(w).Encode(user)
 }
 
 func (h *UserHandler) uploadAvatar(w http.ResponseWriter, r *http.Request) {
@@ -184,7 +184,7 @@ func (h *UserHandler) uploadAvatar(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"avatar_url": avatarURL,
 		"user":       user,
 	})
@@ -203,7 +203,7 @@ func (h *UserHandler) resolveUsername(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewEncoder(w).Encode(user)
+	_ = json.NewEncoder(w).Encode(user)
 }
 
 func (h *UserHandler) getWallet(w http.ResponseWriter, r *http.Request) {
@@ -219,7 +219,7 @@ func (h *UserHandler) getWallet(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewEncoder(w).Encode(wallet)
+	_ = json.NewEncoder(w).Encode(wallet)
 }
 
 func (h *UserHandler) exportSeed(w http.ResponseWriter, r *http.Request) {
@@ -243,7 +243,7 @@ func (h *UserHandler) exportSeed(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"seed_phrase": seed,
 	})
 }
@@ -268,7 +268,7 @@ func (h *UserHandler) rotateSeed(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewEncoder(w).Encode(map[string]interface{}{
+	_ = json.NewEncoder(w).Encode(map[string]interface{}{
 		"seed_phrase": seed,
 	})
 }

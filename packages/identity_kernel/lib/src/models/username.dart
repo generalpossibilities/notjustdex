@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:freezed_annotation/freezed_annotation.dart';
 
 class Username extends Equatable {
   final String value;
@@ -29,4 +30,14 @@ class Username extends Equatable {
 
   @override
   String toString() => '@$value';
+}
+
+class UsernameConverter implements JsonConverter<Username, String> {
+  const UsernameConverter();
+
+  @override
+  Username fromJson(String json) => Username(json);
+
+  @override
+  String toJson(Username object) => object.value;
 }
