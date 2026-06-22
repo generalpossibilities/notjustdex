@@ -8,12 +8,20 @@ build/
 *.gr.dart
 *.pb.dart
 *.pbenum.dart
+*.pbjson.dart
+
+# Flutter web
+apps/web/build/
+apps/mobile/build/
 
 # Go
 vendor/
 *.exe
 *.test
 *.out
+
+# Go workspace
+go.work.sum
 
 # IDE
 .idea/
@@ -29,4 +37,39 @@ Thumbs.db
 .env
 .env.local
 *.log
-dexchats_phases
+notjustdex_phases
+
+# Generated
+*.gen.dart
+
+# Coverage
+coverage/
+*.lcov
+
+# Android
+apps/mobile/.android/
+apps/mobile/.ios/
+apps/mobile/.flutter-plugins
+apps/mobile/.flutter-plugins-dependencies
+apps/mobile/local.properties
+apps/mobile/key.properties
+apps/mobile/android/key.properties
+apps/mobile/android/app/google-services.json
+
+# iOS
+apps/mobile/ios/Pods/
+apps/mobile/ios/.symlinks/
+apps/mobile/ios/Flutter/Flutter.framework
+apps/mobile/ios/Flutter/Flutter.podspec
+apps/mobile/ios/Runner.xcworkspace/
+apps/mobile/ios/build/
+
+# Web
+apps/web/web/assets/
+
+# AI tooling & artifacts
+.opencode/
+AGENTS.md
+ARCHITECTURE.md
+DECENTRALIZATION.md
+RESEARCH.md
