@@ -1,5 +1,5 @@
-name: dexchats_web
-description: DexChats web app
+name: notjustdex_web
+description: NotJustDex web app
 publish_to: none
 version: 0.1.0+1
 
@@ -11,9 +11,9 @@ dependencies:
     sdk: flutter
   flutter_bloc: ^8.1.6
   go_router: ^14.6.0
-  dexchats_identity_kernel:
+  notjustdex_identity_kernel:
     path: ../../packages/identity_kernel
-  dexchats_design_system:
+  notjustdex_design_system:
     path: ../../packages/design_system
 
 dev_dependencies:

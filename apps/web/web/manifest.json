@@ -1,6 +1,6 @@
 {
-  "name": "DexChats",
-  "short_name": "DexChats",
+  "name": "NotJustDex",
+  "short_name": "NotJustDex",
   "start_url": ".",
   "display": "standalone",
   "background_color": "#000000",

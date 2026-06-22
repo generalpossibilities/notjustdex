@@ -1,19 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:dexchats_mini_app_runtime/dexchats_mini_app_runtime.dart';
+import 'package:notjustdex_mini_app_runtime/notjustdex_mini_app_runtime.dart';
 import 'app_module.dart';
 
 class DiscoverModule extends AppModule {
   late MiniAppRegistry _registry;
-  late DexChatsJsBridge _bridge;
+  late NotJustDexJsBridge _bridge;
 
   DiscoverModule() {
     _registry = MiniAppRegistry();
-    _bridge = DexChatsJsBridge();
+    _bridge = NotJustDexJsBridge();
   }
 
   MiniAppRegistry get registry => _registry;
-  DexChatsJsBridge get bridge => _bridge;
+  NotJustDexJsBridge get bridge => _bridge;
 
   @override
   String get name => 'discover';
@@ -62,7 +62,7 @@ class DiscoverModule extends AppModule {
 
 class _DiscoverTabContent extends StatefulWidget {
   final MiniAppRegistry registry;
-  final DexChatsJsBridge bridge;
+  final NotJustDexJsBridge bridge;
   final VoidCallback onOpenStore;
 
   const _DiscoverTabContent({
@@ -115,7 +115,7 @@ class _DiscoverTabContentState extends State<_DiscoverTabContent> {
                     Expanded(
                       child: TextField(
                         decoration: InputDecoration(
-                          hintText: 'Search DexChats...',
+                          hintText: 'Search NotJustDex...',
                           border: InputBorder.none,
                         ),
                       ),

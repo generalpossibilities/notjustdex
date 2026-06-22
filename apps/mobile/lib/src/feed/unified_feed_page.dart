@@ -193,7 +193,7 @@ class _UnifiedFeedPageState extends State<UnifiedFeedPage> {
       ),
       FeedItem(
         id: '3', type: FeedItemType.miniApp,
-        author: const FeedAuthor(id: 'system', username: 'dexchats', displayName: 'DexChats'),
+        author: const FeedAuthor(id: 'system', username: 'dexchats', displayName: 'NotJustDex'),
         content: '🎮 Play the latest games in Games Hub',
         likes: 345, comments: 12, shares: 56, views: 8900, data: {'app_id': 'games'},
         createdAt: DateTime.now().subtract(const Duration(hours: 1)),
@@ -220,7 +220,7 @@ class _UnifiedFeedPageState extends State<UnifiedFeedPage> {
       ),
       FeedItem(
         id: '7', type: FeedItemType.miniApp,
-        author: const FeedAuthor(id: 'system', username: 'dexchats', displayName: 'DexChats'),
+        author: const FeedAuthor(id: 'system', username: 'dexchats', displayName: 'NotJustDex'),
         content: '💎 Check out the NFT Marketplace',
         likes: 567, comments: 34, shares: 89, views: 12000, data: {'app_id': 'market'},
         createdAt: DateTime.now().subtract(const Duration(hours: 1)),

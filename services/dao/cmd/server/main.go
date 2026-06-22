@@ -4,7 +4,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/dexchats/dao/internal/service"
+	"github.com/notjustdex/dao/internal/service"
 )
 
 func main() {

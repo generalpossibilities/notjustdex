@@ -240,7 +240,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
     // In production: use image_picker package
     // Stub: simulate a photo selection
     setState(() {
-      _profilePicUrl = 'https://storage.dexchats.io/avatars/${_userId}/photo.jpg';
+      _profilePicUrl = 'https://storage.notjustdex.io/avatars/${_userId}/photo.jpg';
     });
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Photo set (stub — real picker needs image_picker package)')),

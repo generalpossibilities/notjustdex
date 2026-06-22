@@ -6,7 +6,7 @@ import 'bridge/js_bridge.dart';
 
 class MiniAppWebView extends StatefulWidget {
   final MiniApp app;
-  final DexChatsJsBridge bridge;
+  final NotJustDexJsBridge bridge;
 
   const MiniAppWebView({
     super.key,
@@ -29,7 +29,7 @@ class _MiniAppWebViewState extends State<MiniAppWebView> {
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..addJavaScriptChannel(
-        'DexChatsBridge',
+        'NotJustDexBridge',
         onMessageReceived: (message) {
           final response = widget.bridge.handleCall(message.message);
           _controller.runJavaScript(
@@ -49,7 +49,7 @@ class _MiniAppWebViewState extends State<MiniAppWebView> {
             setState(() => _isLoading = false);
           },
           onNavigationRequest: (request) {
-            if (request.url.startsWith('dexchats://')) {
+            if (request.url.startsWith('notjustdex://')) {
               return NavigationDecision.prevent;
             }
             return NavigationDecision.navigate;

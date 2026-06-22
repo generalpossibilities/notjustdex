@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/dexchats/feed/internal/models"
-	"github.com/dexchats/feed/internal/service"
+	"github.com/notjustdex/feed/internal/models"
+	"github.com/notjustdex/feed/internal/service"
 )
 
 type FeedHandler struct {

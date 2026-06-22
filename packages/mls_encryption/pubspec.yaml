@@ -1,5 +1,5 @@
-name: dexchats_mls_encryption
-description: MLS (Messaging Layer Security) E2E encryption for DexChats chat
+name: notjustdex_mls_encryption
+description: MLS (Messaging Layer Security) E2E encryption for NotJustDex chat
 version: 0.1.0
 publish_to: none
 

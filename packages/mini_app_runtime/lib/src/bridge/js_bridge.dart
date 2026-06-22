@@ -4,11 +4,11 @@ import 'js_api.dart';
 
 typedef ApiHandler = JsApiResponse Function(Map<String, dynamic> params);
 
-class DexChatsJsBridge {
+class NotJustDexJsBridge {
   final Map<String, ApiHandler> _handlers = {};
   final _channel = ValueNotifier<String?>(null);
 
-  DexChatsJsBridge() {
+  NotJustDexJsBridge() {
     registerDefaultHandlers();
   }
 
@@ -24,11 +24,11 @@ class DexChatsJsBridge {
   const api = {};
   const pending = {};
 
-  window.dexchats = {
+  window.notjustdex = {
     call: function(method, params, callback) {
       const id = 'req_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
       pending[id] = callback;
-      window.DexChatsBridge.postMessage(JSON.stringify({id: id, method: method, params: params || {}}));
+      window.NotJustDexBridge.postMessage(JSON.stringify({id: id, method: method, params: params || {}}));
     },
     getIdentity: function(cb) { this.call('getIdentity', {}, cb); },
     getWallet: function(cb) { this.call('getWallet', {}, cb); },

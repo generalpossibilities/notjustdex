@@ -6,7 +6,7 @@ import 'bridge/js_bridge.dart';
 
 class MiniAppStorePage extends StatelessWidget {
   final MiniAppRegistry registry;
-  final DexChatsJsBridge bridge;
+  final NotJustDexJsBridge bridge;
 
   const MiniAppStorePage({
     super.key,

@@ -1,6 +1,6 @@
 package handler
 
-import "github.com/dexchats/moderation/internal/service"
+import "github.com/notjustdex/moderation/internal/service"
 
 type ModerationHandler struct {
 	svc *service.ModerationService

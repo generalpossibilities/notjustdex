@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/dexchats/chat/internal/service"
-	"github.com/dexchats/chat/internal/store"
-	"github.com/dexchats/chat/internal/ws"
+	"github.com/notjustdex/chat/internal/service"
+	"github.com/notjustdex/chat/internal/store"
+	"github.com/notjustdex/chat/internal/ws"
 )
 
 func main() {

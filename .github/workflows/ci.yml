@@ -35,7 +35,6 @@ jobs:
           - users
           - feed
           - chat
-          - hus
           - search
           - notifications
           - media

@@ -15,7 +15,7 @@ class _TourPageState extends State<TourPage> {
   static final _tourItems = [
     _TourItem(
       type: 'video',
-      title: 'Welcome to DexChats',
+      title: 'Welcome to NotJustDex',
       subtitle: 'Connect. Create. Own.',
       color: Color(0xFF6C63FF),
       icon: Icons.play_circle,
@@ -73,7 +73,7 @@ class _TourPageState extends State<TourPage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('DexChats', style: theme.textTheme.titleMedium?.copyWith(
+                Text('NotJustDex', style: theme.textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                 )),
                 Row(

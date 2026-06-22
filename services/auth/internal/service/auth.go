@@ -50,7 +50,7 @@ type PasskeyRegistration struct {
 type Challenge struct {
 	ID        string    `json:"id"`
 	WalletAddr string   `json:"wallet_addr"`
-	Message   string    `json:"message"`   // "Sign this message to log in to DexChats: {nonce}"
+	Message   string    `json:"message"`   // "Sign this message to log in to NotJustDex: {nonce}"
 	Nonce     string    `json:"nonce"`
 	ExpiresAt time.Time `json:"expires_at"`
 	Used      bool      `json:"used"`
@@ -118,8 +118,8 @@ func (s *AuthService) BeginPasskeyRegistration(userID, userName string) (map[str
 		"publicKey": map[string]interface{}{
 			"challenge": challenge,
 			"rp": map[string]string{
-				"name": "DexChats",
-				"id":   "dexchats.io",
+				"name": "NotJustDex",
+				"id":   "notjustdex.io",
 			},
 			"user": map[string]interface{}{
 				"id":   userIDEnc,
@@ -218,7 +218,7 @@ func (s *AuthService) CreateChallenge(walletAddr string) (*Challenge, error) {
 		return nil, err
 	}
 
-	msg := fmt.Sprintf("Sign this message to authenticate with DexChats.\n\nWallet: %s\nNonce: %s\nTimestamp: %d",
+	msg := fmt.Sprintf("Sign this message to authenticate with NotJustDex.\n\nWallet: %s\nNonce: %s\nTimestamp: %d",
 		walletAddr, nonce, time.Now().UnixMilli())
 
 	chal := &Challenge{
@@ -301,7 +301,7 @@ func (s *AuthService) verifyGroth16Proof(proof ZKProof, chal *Challenge) error {
 	}
 
 	// In production: verify the Groth16 proof using bellman or ark-groth16
-	// against the verification key stored on-chain in the HUS contract.
+	// against the verification key stored on-chain.
 
 	return nil
 }

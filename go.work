@@ -1,16 +1,16 @@
 go 1.23
 
 use (
-  ./services/auth
-  ./services/users
-  ./services/feed
-  ./services/chat
-  ./services/hus
-  ./services/search
-  ./services/notifications
-  ./services/media
-  ./services/analytics
-  ./services/moderation
-  ./services/dao
-  ./services/creator_economy
+	./lib/go
+	./services/analytics
+	./services/auth
+	./services/chat
+	./services/creator_economy
+	./services/dao
+	./services/feed
+	./services/media
+	./services/moderation
+	./services/notifications
+	./services/search
+	./services/users
 )

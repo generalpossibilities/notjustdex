@@ -4,7 +4,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dexchats/media/internal/pipeline"
+	"github.com/notjustdex/media/internal/pipeline"
 )
 
 type UploadRecord struct {

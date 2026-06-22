@@ -7,7 +7,7 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/dexchats/search/internal/index"
+	"github.com/notjustdex/search/internal/index"
 )
 
 func main() {

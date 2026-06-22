@@ -1,5 +1,5 @@
 class DeepLinkHandler {
-  static const _scheme = 'dexchats';
+  static const _scheme = 'notjustdex';
   static const _hosts = [
     'miniapp',
     'profile',
@@ -41,7 +41,7 @@ class DeepLinkHandler {
     return null;
   }
 
-  static bool isDexChatsUrl(String url) {
+  static bool isNotJustDexUrl(String url) {
     return url.startsWith('$_scheme://');
   }
 }

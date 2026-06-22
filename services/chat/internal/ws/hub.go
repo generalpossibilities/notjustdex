@@ -7,8 +7,8 @@ import (
 	"sync"
 
 	"github.com/gorilla/websocket"
-	"github.com/dexchats/chat/internal/service"
-	"github.com/dexchats/chat/internal/store"
+	"github.com/notjustdex/chat/internal/service"
+	"github.com/notjustdex/chat/internal/store"
 )
 
 var upgrader = websocket.Upgrader{

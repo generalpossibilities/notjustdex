@@ -17,17 +17,17 @@ import 'src/core/services/session_service.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const DexChatsApp());
+  runApp(const NotJustDexApp());
 }
 
-class DexChatsApp extends StatefulWidget {
-  const DexChatsApp({super.key});
+class NotJustDexApp extends StatefulWidget {
+  const NotJustDexApp({super.key});
 
   @override
-  State<DexChatsApp> createState() => _DexChatsAppState();
+  State<NotJustDexApp> createState() => _NotJustDexAppState();
 }
 
-class _DexChatsAppState extends State<DexChatsApp> {
+class _NotJustDexAppState extends State<NotJustDexApp> {
   late List<AppModule> _modules;
   late ModuleRouter _moduleRouter;
   final _session = SessionService();
@@ -65,7 +65,7 @@ class _DexChatsAppState extends State<DexChatsApp> {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      title: 'DexChats',
+      title: 'NotJustDex',
       debugShowCheckedModeBanner: false,
       theme: _buildTheme(),
       routerConfig: _buildRouter(),
@@ -130,7 +130,7 @@ class _DexChatsAppState extends State<DexChatsApp> {
       GoRoute(
         path: '/browser',
         builder: (_, state) => BrowserPage(
-          initialUrl: state.extra as String? ?? 'https://dexchats.io',
+          initialUrl: state.extra as String? ?? 'https://notjustdex.io',
         ),
       ),
     ];

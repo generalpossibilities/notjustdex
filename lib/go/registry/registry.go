@@ -196,7 +196,7 @@ func (c *SimpleClient) Health() *HealthStatus {
 	}
 }
 
-func (c *SimpleClient) Name() string { return c.Name }
+func (c *SimpleClient) ServiceName() string { return c.Name }
 
 func (c *SimpleClient) Get(path string) ([]byte, error) {
 	resp, err := c.client.Get(fmt.Sprintf("http://%s%s", c.Host, path))

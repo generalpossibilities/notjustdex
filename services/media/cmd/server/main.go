@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/dexchats/media/internal/pipeline"
-	"github.com/dexchats/media/internal/store"
+	"github.com/notjustdex/media/internal/pipeline"
+	"github.com/notjustdex/media/internal/store"
 )
 
 func main() {

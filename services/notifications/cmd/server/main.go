@@ -9,9 +9,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/dexchats/notifications/internal/hub"
-	"github.com/dexchats/notifications/internal/store"
-	"github.com/dexchats/notifications/internal/types"
+	"github.com/notjustdex/notifications/internal/hub"
+	"github.com/notjustdex/notifications/internal/store"
+	"github.com/notjustdex/notifications/internal/types"
 )
 
 func main() {

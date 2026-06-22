@@ -1,5 +1,5 @@
-name: dexchats_in_app_browser
-description: In-app browser for DexChats with WebView, nav controls, deep links.
+name: notjustdex_in_app_browser
+description: In-app browser for NotJustDex with WebView, nav controls, deep links.
 version: 0.1.0
 publish_to: none
 

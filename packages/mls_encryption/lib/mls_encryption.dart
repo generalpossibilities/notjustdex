@@ -1,4 +1,4 @@
-library dexchats_mls_encryption;
+library notjustdex_mls_encryption;
 
 export 'src/mls_group.dart';
 export 'src/mls_message.dart';

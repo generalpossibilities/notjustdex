@@ -1,4 +1,4 @@
-# DexChats Feature Flags
+# NotJustDex Feature Flags
 # Every module is independently connectable/disconnectable.
 # Set enabled: false to remove the module entirely from the app.
 
@@ -50,11 +50,6 @@ moderation:
 media:
   enabled: true
   service_host: "media:8088"
-  required: false
-
-hus:
-  enabled: true
-  service_host: "hus:8084"
   required: false
 
 dao:

@@ -1,6 +1,6 @@
 package handler
 
-import "github.com/dexchats/analytics/internal/service"
+import "github.com/notjustdex/analytics/internal/service"
 
 type AnalyticsHandler struct {
 	svc *service.AnalyticsService

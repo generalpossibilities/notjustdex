@@ -1,4 +1,4 @@
-name: dexchats
+name: notjustdex
 
 packages:
   - apps/**
@@ -35,11 +35,11 @@ scripts:
     description: Regenerate all code
 
   gen:proto:
-    run: melos exec -c 1 --scope dexchats_shared_proto -- dart run build_runner build --delete-conflicting-outputs
+    run: melos exec -c 1 --scope notjustdex_shared_proto -- dart run build_runner build --delete-conflicting-outputs
     description: Generate protobuf dart code
 
   gen:code:
-    run: melos exec -c 1 --scope dexchats_identity_kernel -- dart run build_runner build --delete-conflicting-outputs
+    run: melos exec -c 1 --scope notjustdex_identity_kernel -- dart run build_runner build --delete-conflicting-outputs
     description: Run dart code generation (freezed, json_serializable)
 
   clean:go:

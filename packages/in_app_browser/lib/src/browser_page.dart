@@ -58,7 +58,7 @@ class _BrowserPageState extends State<BrowserPage> {
             });
           },
           onNavigationRequest: (request) {
-            if (DeepLinkHandler.isDexChatsUrl(request.url)) {
+            if (DeepLinkHandler.isNotJustDexUrl(request.url)) {
               final link = DeepLinkHandler.parse(request.url);
               if (link != null && context.mounted) {
                 _handleDeepLink(link);

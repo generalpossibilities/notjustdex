@@ -1,6 +1,6 @@
 package handler
 
-import "github.com/dexchats/creator_economy/internal/service"
+import "github.com/notjustdex/creator_economy/internal/service"
 
 type CreatorEconomyHandler struct {
 	svc *service.CreatorEconomyService

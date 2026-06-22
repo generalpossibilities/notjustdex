@@ -1,12 +1,7 @@
-module github.com/dexchats/chat
+module github.com/notjustdex/chat
 
 go 1.23
 
-require (
-	github.com/dexchats/lib v0.0.0
-	connectrpc.com/connect v1.16.0
-	google.golang.org/protobuf v1.34.0
-	github.com/gorilla/websocket v1.5.3
-)
+require github.com/gorilla/websocket v1.5.3
 
-replace github.com/dexchats/lib => ../../lib/go
+replace github.com/notjustdex/lib => ../../lib/go

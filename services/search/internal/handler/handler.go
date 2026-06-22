@@ -1,6 +1,6 @@
 package handler
 
-import "github.com/dexchats/search/internal/service"
+import "github.com/notjustdex/search/internal/service"
 
 type SearchHandler struct {
 	svc *service.SearchService

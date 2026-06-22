@@ -4,7 +4,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dexchats/moderation/internal/ml"
+	"github.com/notjustdex/moderation/internal/ml"
 )
 
 type ReportStatus string

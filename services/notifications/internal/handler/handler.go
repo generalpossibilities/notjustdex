@@ -1,6 +1,6 @@
 package handler
 
-import "github.com/dexchats/notifications/internal/service"
+import "github.com/notjustdex/notifications/internal/service"
 
 type NotificationsHandler struct {
 	svc *service.NotificationsService

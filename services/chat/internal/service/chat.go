@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/dexchats/chat/internal/store"
+	"github.com/notjustdex/chat/internal/store"
 )
 
 type ChatService struct {

@@ -1,5 +1,5 @@
-name: dexchats_mini_app_runtime
-description: Mini app runtime for DexChats — sandboxed WebView with JS bridge, registry, permissions.
+name: notjustdex_mini_app_runtime
+description: Mini app runtime for NotJustDex — sandboxed WebView with JS bridge, registry, permissions.
 version: 0.1.0
 publish_to: none
 

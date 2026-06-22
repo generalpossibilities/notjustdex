@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"github.com/dexchats/auth/internal/service"
+	"github.com/notjustdex/auth/internal/service"
 )
 
 type AuthHandler struct {

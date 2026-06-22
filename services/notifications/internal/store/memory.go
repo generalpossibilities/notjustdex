@@ -3,7 +3,7 @@ package store
 import (
 	"sync"
 
-	"github.com/dexchats/notifications/internal/types"
+	"github.com/notjustdex/notifications/internal/types"
 )
 
 type MemoryStore struct {

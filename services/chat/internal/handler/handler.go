@@ -1,8 +1,8 @@
 package handler
 
 import (
-	"github.com/dexchats/chat/internal/service"
-	"github.com/dexchats/chat/internal/ws"
+	"github.com/notjustdex/chat/internal/service"
+	"github.com/notjustdex/chat/internal/ws"
 )
 
 type ChatHandler struct {

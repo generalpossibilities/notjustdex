@@ -20,7 +20,7 @@ class WalletService {
     if (_chainClient != null) {
       final walletData = await _repository.getWallet(identityId);
       if (walletData != null) {
-        final identityRoot = sha256.convert(utf8.encode('dexchats_$identityId')).bytes;
+        final identityRoot = sha256.convert(utf8.encode('notjustdex_$identityId')).bytes;
         try {
           await _chainClient.registerIdentity(
             username: wallet.username,

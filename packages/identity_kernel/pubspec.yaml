@@ -1,4 +1,4 @@
-name: dexchats_identity_kernel
+name: notjustdex_identity_kernel
 version: 0.1.0
 publish_to: none
 
@@ -16,7 +16,7 @@ dependencies:
   convert: ^3.1.2
   crypto: ^3.0.3
   cryptography: ^2.7.0
-  dexchats_shared_proto:
+  notjustdex_shared_proto:
     path: ../shared_proto
 
 dev_dependencies:

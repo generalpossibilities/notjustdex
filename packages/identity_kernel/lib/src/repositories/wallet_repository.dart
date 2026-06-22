@@ -53,7 +53,7 @@ class MpcWalletRepository implements WalletRepository {
     final hash = _passwords[identityId];
     if (hash == null) return false;
 
-    final input = utf8.encode('dexchats_pwd_$password');
+    final input = utf8.encode('notjustdex_pwd_$password');
     return sha256.convert(input).toString() == hash;
   }
 

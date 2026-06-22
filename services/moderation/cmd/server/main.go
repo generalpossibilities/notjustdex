@@ -8,8 +8,8 @@ import (
 	"os"
 	"time"
 
-	"github.com/dexchats/moderation/internal/ml"
-	"github.com/dexchats/moderation/internal/store"
+	"github.com/notjustdex/moderation/internal/ml"
+	"github.com/notjustdex/moderation/internal/store"
 )
 
 func main() {

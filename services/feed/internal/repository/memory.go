@@ -6,7 +6,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dexchats/feed/internal/models"
+	"github.com/notjustdex/feed/internal/models"
 )
 
 type FeedRepository struct {

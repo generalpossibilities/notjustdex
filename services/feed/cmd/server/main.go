@@ -7,10 +7,10 @@ import (
 	"os"
 	"time"
 
-	"github.com/dexchats/feed/internal/handler"
-	"github.com/dexchats/feed/internal/models"
-	"github.com/dexchats/feed/internal/repository"
-	"github.com/dexchats/feed/internal/service"
+	"github.com/notjustdex/feed/internal/handler"
+	"github.com/notjustdex/feed/internal/models"
+	"github.com/notjustdex/feed/internal/repository"
+	"github.com/notjustdex/feed/internal/service"
 )
 
 func main() {
@@ -95,16 +95,16 @@ func seedContent(repo *repository.FeedRepository) {
 		content  string
 		mediaURL string
 	}{
-		{"video", "author_001", "Morning run in the park! 🏃‍♂️", "https://dexchats.io/media/videos/001.mp4"},
-		{"image", "author_002", "Sunset from the rooftop 🌅", "https://dexchats.io/media/images/002.jpg"},
+		{"video", "author_001", "Morning run in the park! 🏃‍♂️", "https://notjustdex.io/media/videos/001.mp4"},
+		{"image", "author_002", "Sunset from the rooftop 🌅", "https://notjustdex.io/media/images/002.jpg"},
 		{"text", "author_003", "Hot take: The best code is the code you don't write. Think about it.", ""},
-		{"video", "author_001", "My puppy learned a new trick! 🐕", "https://dexchats.io/media/videos/004.mp4"},
-		{"image", "author_004", "New coffee shop downtown ☕", "https://dexchats.io/media/images/005.jpg"},
-		{"text", "author_005", "Thread: How we built DexChats from scratch 🧵", ""},
-		{"video", "author_002", "Cooking tutorial: Perfect pasta aglio e olio", "https://dexchats.io/media/videos/007.mp4"},
-		{"image", "author_003", "Weekend hike views 🏔️", "https://dexchats.io/media/images/008.jpg"},
-		{"story", "author_004", "Good morning from Tokyo! 🇯🇵", "https://dexchats.io/media/stories/009.jpg"},
-		{"video", "author_005", "React Native vs Flutter — Honest comparison", "https://dexchats.io/media/videos/010.mp4"},
+		{"video", "author_001", "My puppy learned a new trick! 🐕", "https://notjustdex.io/media/videos/004.mp4"},
+		{"image", "author_004", "New coffee shop downtown ☕", "https://notjustdex.io/media/images/005.jpg"},
+		{"text", "author_005", "Thread: How we built NotJustDex from scratch 🧵", ""},
+		{"video", "author_002", "Cooking tutorial: Perfect pasta aglio e olio", "https://notjustdex.io/media/videos/007.mp4"},
+		{"image", "author_003", "Weekend hike views 🏔️", "https://notjustdex.io/media/images/008.jpg"},
+		{"story", "author_004", "Good morning from Tokyo! 🇯🇵", "https://notjustdex.io/media/stories/009.jpg"},
+		{"video", "author_005", "React Native vs Flutter — Honest comparison", "https://notjustdex.io/media/videos/010.mp4"},
 	}
 
 	for _, s := range seed {

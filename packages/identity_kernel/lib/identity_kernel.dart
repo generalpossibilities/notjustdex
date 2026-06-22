@@ -7,7 +7,6 @@ export 'src/services/identity_service.dart';
 export 'src/services/wallet_service.dart';
 export 'src/services/authentication_service.dart';
 export 'src/services/recovery_service.dart';
-export 'src/services/hus_service.dart';
 export 'src/repositories/identity_repository.dart';
 export 'src/repositories/wallet_repository.dart';
 export 'src/repositories/wallet_repository_interface.dart';

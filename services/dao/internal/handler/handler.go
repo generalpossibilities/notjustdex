@@ -1,6 +1,6 @@
 package handler
 
-import "github.com/dexchats/dao/internal/service"
+import "github.com/notjustdex/dao/internal/service"
 
 type DAOHandler struct {
 	svc *service.DAOService

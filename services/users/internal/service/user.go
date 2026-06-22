@@ -1,6 +1,7 @@
 package service
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
@@ -9,7 +10,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/dexchats/lib/go/chain"
+	"github.com/notjustdex/lib/chain"
 )
 
 type UserService struct {
@@ -106,7 +107,7 @@ func (s *UserService) CreateUser(phoneNumber, username, displayName string) (*Us
 	// Register identity on chain (best-effort)
 	if s.useChain {
 		go func() {
-			ctx, cancel := withTimeout(30 * time.Second)
+			ctx, cancel := context.WithTimeout(context.Background(), 30 * time.Second)
 			defer cancel()
 
 			txHash, err := s.chainCli.RegisterIdentity(ctx, keys, username)
@@ -145,7 +146,7 @@ func (s *UserService) GetWallet(identityID string) (*WalletData, error) {
 
 	// Fetch live VMSHELL balance from chain if connected
 	if s.useChain {
-		ctx, cancel := withTimeout(10 * time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 10 * time.Second)
 		defer cancel()
 
 		bal, err := s.chainCli.GetBalance(ctx, wallet.Address)
@@ -201,7 +202,7 @@ func (s *UserService) CheckUsernameAvailability(username string) bool {
 
 	// Check chain first if connected
 	if s.useChain {
-		ctx, cancel := withTimeout(10 * time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 10 * time.Second)
 		defer cancel()
 
 		available, err := s.chainCli.CheckUsernameAvailability(ctx, username)
@@ -231,7 +232,7 @@ func (s *UserService) ResolveUsername(username string) (*UserProfile, error) {
 	}
 
 	if s.useChain {
-		ctx, cancel := withTimeout(10 * time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 10 * time.Second)
 		defer cancel()
 
 		addr, err := s.chainCli.ResolveUsername(ctx, username)
@@ -249,7 +250,7 @@ func (s *UserService) ResolveUsername(username string) (*UserProfile, error) {
 
 func (s *UserService) ExportMnemonic(identityID string) ([]string, error) {
 	s.mu.RLock()
-	wallet, exists := s.wallets[identityID]
+	_, exists := s.wallets[identityID]
 	s.mu.RUnlock()
 
 	if !exists {
@@ -290,7 +291,7 @@ func (s *UserService) RotateSeedPhrase(identityID string) ([]string, error) {
 
 	// Update on chain if connected
 	if s.useChain {
-		ctx, cancel := withTimeout(30 * time.Second)
+		ctx, cancel := context.WithTimeout(context.Background(), 30 * time.Second)
 		defer cancel()
 
 		txHash, err := s.chainCli.RotateSeedPhrase(ctx, keys, nil)
@@ -312,37 +313,4 @@ func generateUserID() string {
 	return "usr_" + hex.EncodeToString(bytes)
 }
 
-// withTimeout creates a simple context-like timeout.
-func withTimeout(d time.Duration) (interface {
-	Deadline() (time.Time, bool)
-	Done() <-chan struct{}
-	Err() error
-}, func()) {
-	return newTimeout(d)
-}
 
-type timeoutCtx struct {
-	done chan struct{}
-	err  error
-}
-
-func newTimeout(d time.Duration) (*timeoutCtx, func()) {
-	ctx := &timeoutCtx{done: make(chan struct{})}
-	timer := time.AfterFunc(d, func() {
-		ctx.err = errors.New("deadline exceeded")
-		close(ctx.done)
-	})
-	return ctx, func() { timer.Stop() }
-}
-
-func (c *timeoutCtx) Deadline() (time.Time, bool) {
-	return time.Now().Add(time.Second), true
-}
-
-func (c *timeoutCtx) Done() <-chan struct{} {
-	return c.done
-}
-
-func (c *timeoutCtx) Err() error {
-	return c.err
-}

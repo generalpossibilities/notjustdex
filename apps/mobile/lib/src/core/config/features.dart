@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:yaml/yaml.dart';
 
 class FeatureFlags {
   final bool feed;
@@ -10,8 +11,8 @@ class FeatureFlags {
   final bool search;
   final bool moderation;
   final bool media;
-  final bool hus;
   final bool analytics;
+  final bool dao;
 
   // Service hosts (for connecting to Go backends)
   final String authHost;
@@ -23,7 +24,8 @@ class FeatureFlags {
   final String creatorEconomyHost;
   final String moderationHost;
   final String mediaHost;
-  final String husHost;
+  final String analyticsHost;
+  final String daoHost;
 
   const FeatureFlags({
     this.feed = true,
@@ -34,8 +36,8 @@ class FeatureFlags {
     this.search = true,
     this.moderation = true,
     this.media = true,
-    this.hus = true,
     this.analytics = true,
+    this.dao = false,
     this.authHost = 'http://localhost:8081',
     this.usersHost = 'http://localhost:8082',
     this.feedHost = 'http://localhost:8083',
@@ -45,7 +47,8 @@ class FeatureFlags {
     this.creatorEconomyHost = 'http://localhost:8092',
     this.moderationHost = 'http://localhost:8090',
     this.mediaHost = 'http://localhost:8088',
-    this.husHost = 'http://localhost:8084',
+    this.analyticsHost = 'http://localhost:8089',
+    this.daoHost = 'http://localhost:8091',
   });
 
   static const production = FeatureFlags();
@@ -68,8 +71,8 @@ class FeatureFlags {
       search: json['search']?['enabled'] as bool? ?? true,
       moderation: json['moderation']?['enabled'] as bool? ?? true,
       media: json['media']?['enabled'] as bool? ?? true,
-      hus: json['hus']?['enabled'] as bool? ?? true,
       analytics: json['analytics']?['enabled'] as bool? ?? true,
+      dao: json['dao']?['enabled'] as bool? ?? false,
       authHost: host('auth', 'http://localhost:8081'),
       usersHost: host('users', 'http://localhost:8082'),
       feedHost: host('feed', 'http://localhost:8083'),
@@ -79,7 +82,8 @@ class FeatureFlags {
       creatorEconomyHost: host('creator_economy', 'http://localhost:8092'),
       moderationHost: host('moderation', 'http://localhost:8090'),
       mediaHost: host('media', 'http://localhost:8088'),
-      husHost: host('hus', 'http://localhost:8084'),
+      analyticsHost: host('analytics', 'http://localhost:8089'),
+      daoHost: host('dao', 'http://localhost:8091'),
     );
   }
 
@@ -88,7 +92,9 @@ class FeatureFlags {
       final file = File('config/features.yaml');
       if (await file.exists()) {
         final content = await file.readAsString();
-        return FeatureFlags.fromJson(jsonDecode(content) as Map<String, dynamic>);
+        final yaml = loadYaml(content) as YamlMap;
+        final map = yaml.cast<String, dynamic>();
+        return FeatureFlags.fromJson(map);
       }
     } catch (_) {}
     return production;

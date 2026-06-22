@@ -19,8 +19,8 @@ class _ConversationListPageState extends State<ConversationListPage> {
     },
     {
       'id': 'conv_2',
-      'name': 'DexChats Dev Team',
-      'last_message': 'Welcome to DexChats! 🎉',
+      'name': 'NotJustDex Dev Team',
+      'last_message': 'Welcome to NotJustDex! 🎉',
       'time': '5m ago',
       'unread': 0,
     },

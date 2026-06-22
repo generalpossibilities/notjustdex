@@ -1,5 +1,5 @@
-name: dexchats_mobile
-description: DexChats mobile app
+name: notjustdex_mobile
+description: NotJustDex mobile app
 publish_to: none
 version: 0.1.0+1
 
@@ -19,14 +19,15 @@ dependencies:
   isar_flutter_libs: ^3.1.0+1
   hive: ^2.2.3
   hive_flutter: ^1.1.0
-  dexchats_identity_kernel:
+  notjustdex_identity_kernel:
     path: ../../packages/identity_kernel
-  dexchats_design_system:
+  notjustdex_design_system:
     path: ../../packages/design_system
-  dexchats_in_app_browser:
+  notjustdex_in_app_browser:
     path: ../../packages/in_app_browser
-  dexchats_mini_app_runtime:
+  notjustdex_mini_app_runtime:
     path: ../../packages/mini_app_runtime
+  yaml: ^3.1.2
 
 dev_dependencies:
   flutter_test:

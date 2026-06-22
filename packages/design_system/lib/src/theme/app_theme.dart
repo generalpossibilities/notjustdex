@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-class DexChatsTheme {
+class NotJustDexTheme {
   static const Color primary = Color(0xFF6C63FF);
   static const Color surface = Color(0xFF0D0D0D);
   static const Color surfaceVariant = Color(0xFF1A1A2E);

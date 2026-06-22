@@ -1,0 +1,87 @@
+{
+	"ABI version": 2,
+	"version": "2.4",
+	"header": ["pubkey", "time", "expire"],
+	"functions": [
+		{
+			"name": "constructor",
+			"inputs": [
+				{"name":"owner","type":"address"},
+				{"name":"value","type":"uint64"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "update",
+			"inputs": [
+				{"name":"data","type":"cell"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "transferOwnership",
+			"inputs": [
+				{"name":"newOwner","type":"address"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "getVault",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"encryptedData","type":"cell"},
+				{"name":"version","type":"uint32"},
+				{"name":"updatedAt","type":"uint64"}
+			]
+		},
+		{
+			"name": "getOwner",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"value0","type":"address"}
+			]
+		},
+		{
+			"name": "getVersion",
+			"inputs": [
+			],
+			"outputs": [
+				{"name":"value0","type":"string"}
+			]
+		}
+	],
+	"events": [
+		{
+			"name": "VaultUpdated",
+			"inputs": [
+				{"name":"version","type":"uint32"},
+				{"name":"timestamp","type":"uint64"}
+			],
+			"outputs": [
+			]
+		},
+		{
+			"name": "OwnershipTransferred",
+			"inputs": [
+				{"name":"prevOwner","type":"address"},
+				{"name":"newOwner","type":"address"}
+			],
+			"outputs": [
+			]
+		}
+	],
+	"fields": [
+		{"init":true,"name":"_pubkey","type":"uint256"},
+		{"init":false,"name":"_timestamp","type":"uint64"},
+		{"init":false,"name":"_constructorFlag","type":"bool"},
+		{"init":false,"name":"_owner","type":"address"},
+		{"init":false,"name":"_encryptedData","type":"cell"},
+		{"init":false,"name":"_version","type":"uint32"},
+		{"init":false,"name":"_updatedAt","type":"uint64"}
+	]
+}

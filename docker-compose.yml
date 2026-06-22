@@ -1,12 +1,12 @@
-name: dexchats
+name: notjustdex
 
 services:
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_USER: dexchats
-      POSTGRES_PASSWORD: dexchats
-      POSTGRES_DB: dexchats
+      POSTGRES_USER: notjustdex
+      POSTGRES_PASSWORD: notjustdex
+      POSTGRES_DB: notjustdex
     ports:
       - "5432:5432"
     volumes:
@@ -39,40 +39,61 @@ services:
     environment:
       LISTEN_ADDR: ":8083"
 
-  hus:
-    build: ./services/hus
+  chat:
+    build: ./services/chat
     ports:
       - "8085:8085"
     environment:
       LISTEN_ADDR: ":8085"
 
-  chat:
-    build: ./services/chat
+  search:
+    build: ./services/search
     ports:
       - "8086:8086"
     environment:
       LISTEN_ADDR: ":8086"
 
-  search:
-    build: ./services/search
+  notifications:
+    build: ./services/notifications
     ports:
       - "8087:8087"
     environment:
       LISTEN_ADDR: ":8087"
 
-  notifications:
-    build: ./services/notifications
+  media:
+    build: ./services/media
     ports:
       - "8088:8088"
     environment:
       LISTEN_ADDR: ":8088"
 
-  media:
-    build: ./services/media
+  analytics:
+    build: ./services/analytics
     ports:
       - "8089:8089"
     environment:
       LISTEN_ADDR: ":8089"
+
+  moderation:
+    build: ./services/moderation
+    ports:
+      - "8090:8090"
+    environment:
+      LISTEN_ADDR: ":8090"
+
+  dao:
+    build: ./services/dao
+    ports:
+      - "8091:8091"
+    environment:
+      LISTEN_ADDR: ":8091"
+
+  creator_economy:
+    build: ./services/creator_economy
+    ports:
+      - "8092:8092"
+    environment:
+      LISTEN_ADDR: ":8092"
 
 volumes:
   pgdata:

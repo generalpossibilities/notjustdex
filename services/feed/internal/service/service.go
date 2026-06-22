@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/dexchats/feed/internal/models"
-	"github.com/dexchats/feed/internal/repository"
+	"github.com/notjustdex/feed/internal/models"
+	"github.com/notjustdex/feed/internal/repository"
 )
 
 type FeedService struct {

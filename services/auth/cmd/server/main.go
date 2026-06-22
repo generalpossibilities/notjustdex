@@ -5,8 +5,8 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/dexchats/auth/internal/handler"
-	"github.com/dexchats/auth/internal/service"
+	"github.com/notjustdex/auth/internal/handler"
+	"github.com/notjustdex/auth/internal/service"
 )
 
 func main() {

@@ -17,7 +17,7 @@ class WelcomePage extends StatelessWidget {
               Icon(Icons.forum, size: 80, color: theme.colorScheme.primary),
               const SizedBox(height: 16),
               Text(
-                'DexChats',
+                'NotJustDex',
                 style: theme.textTheme.displaySmall?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),

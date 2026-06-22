@@ -5,13 +5,13 @@ import 'passkey_exception.dart';
 /// Cross-platform WebAuthn (passkey) implementation.
 ///
 /// Platform channels:
-/// - Android: `com.dexchats.passkey/create` and `/assert`
+/// - Android: `com.notjustdex.passkey/create` and `/assert`
 ///   Uses CredentialManager API (Android 14+) or FIDO2
-/// - iOS: `com.dexchats.passkey/create` and `/assert`
+/// - iOS: `com.notjustdex.passkey/create` and `/assert`
 ///   Uses ASAuthorizationController (iOS 15+)
 /// - Web: direct `navigator.credentials` via js_interop
 class PasskeyService {
-  static const _channel = MethodChannel('com.dexchats.passkey');
+  static const _channel = MethodChannel('com.notjustdex.passkey');
 
   /// Check whether the device/platform supports passkeys.
   Future<bool> isSupported() async {
@@ -27,7 +27,7 @@ class PasskeyService {
   ///
   /// [userId] - unique user identifier
   /// [userName] - display name for the passkey
-  /// [rpId] - relying party ID (e.g. "dexchats.io")
+  /// [rpId] - relying party ID (e.g. "notjustdex.io")
   ///
   /// Returns `PasskeyCredential` with:
   /// - `id` - base64url-encoded credential ID
@@ -36,7 +36,7 @@ class PasskeyService {
   Future<PasskeyCredential> createCredential({
     required String userId,
     required String userName,
-    String rpId = 'dexchats.io',
+    String rpId = 'notjustdex.io',
   }) async {
     final challenge = _generateChallenge();
 
@@ -76,7 +76,7 @@ class PasskeyService {
   /// - `clientDataJSON` - base64url-encoded client data JSON
   /// - `userHandle` - base64url-encoded user handle (optional)
   Future<PasskeyAssertion> getAssertion({
-    String rpId = 'dexchats.io',
+    String rpId = 'notjustdex.io',
     List<String>? credentialIds,
   }) async {
     final challenge = _generateChallenge();
@@ -208,7 +208,7 @@ class PasskeyService {
     //   final cred = await navigator.credentials.create(CredentialCreationOptions(
     //     publicKey: PublicKeyCredentialCreationOptions(
     //       challenge: challenge,
-    //       rp: { name: 'DexChats', id: rpId },
+    //       rp: { name: 'NotJustDex', id: rpId },
     //       user: { id: userId, name: userName, displayName: userName },
     //       pubKeyCredParams: [
     //         { type: 'public-key', alg: -7 },   // ES256

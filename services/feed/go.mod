@@ -1,4 +1,4 @@
-module github.com/dexchats/feed
+module github.com/notjustdex/feed
 
 go 1.23
 
@@ -7,4 +7,4 @@ require (
 	google.golang.org/protobuf v1.36.6
 )
 
-replace github.com/dexchats/lib => ../../lib/go
+replace github.com/notjustdex/lib => ../../lib/go

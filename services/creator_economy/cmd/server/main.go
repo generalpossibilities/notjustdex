@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/dexchats/creator_economy/internal/service"
+	"github.com/notjustdex/creator_economy/internal/service"
 )
 
 func main() {

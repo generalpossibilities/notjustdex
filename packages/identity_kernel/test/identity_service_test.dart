@@ -1,6 +1,6 @@
 import 'package:test/test.dart';
 import 'package:mockito/mockito.dart';
-import 'package:dexchats_identity_kernel/identity_kernel.dart';
+import 'package:notjustdex_identity_kernel/identity_kernel.dart';
 
 class MockIdentityRepository extends Mock implements IdentityRepository {}
 

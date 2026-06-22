@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
-class DexChatsAvatar extends StatelessWidget {
+class NotJustDexAvatar extends StatelessWidget {
   final String? imageUrl;
   final String? initials;
   final double size;
 
-  const DexChatsAvatar({
+  const NotJustDexAvatar({
     super.key,
     this.imageUrl,
     this.initials,

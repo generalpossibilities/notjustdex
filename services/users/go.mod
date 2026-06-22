@@ -1,12 +1,7 @@
-module github.com/dexchats/users
+module github.com/notjustdex/users
 
 go 1.23
 
-require (
-	github.com/dexchats/lib v0.0.0
-	connectrpc.com/connect v1.16.0
-	google.golang.org/protobuf v1.34.0
-	github.com/lib/pq v1.10.9
-)
+require github.com/notjustdex/lib v0.0.0
 
-replace github.com/dexchats/lib => ../../lib/go
+replace github.com/notjustdex/lib => ../../lib/go

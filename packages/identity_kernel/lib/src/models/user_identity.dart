@@ -15,8 +15,7 @@ class UserIdentity with _$UserIdentity {
     required Profile profile,
     required Wallet wallet,
     required List<AuthenticationMethod> authMethods,
-    @Default(false) bool isHusVerified,
-    @Default(0.0) double husScore,
+
     required DateTime createdAt,
     DateTime? lastLoginAt,
   }) = _UserIdentity;

@@ -2,10 +2,9 @@ package handler
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 
-	"github.com/dexchats/users/internal/service"
+	"github.com/notjustdex/users/internal/service"
 )
 
 type UserHandler struct {
@@ -176,7 +175,7 @@ func (h *UserHandler) uploadAvatar(w http.ResponseWriter, r *http.Request) {
 
 	// In production: upload to S3/IPFS, store URL
 	// Stub: return a mock URL
-	avatarURL := "https://storage.dexchats.io/avatars/" + userID + "/" + header.Filename
+	avatarURL := "https://storage.notjustdex.io/avatars/" + userID + "/" + header.Filename
 
 	user, err := h.svc.UpdateProfile(userID, "", "", avatarURL)
 	if err != nil {

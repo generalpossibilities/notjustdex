@@ -1,0 +1,77 @@
+syntax = "proto3";
+
+package notjustdex.identity.v1;
+
+option go_package = "github.com/notjustdex/identity/v1;identityv1";
+
+import "notjustdex/common/v1/common.proto";
+
+service IdentityService {
+  rpc CreateIdentity(CreateIdentityRequest) returns (CreateIdentityResponse);
+  rpc GetIdentity(GetIdentityRequest) returns (GetIdentityResponse);
+  rpc UpdateProfile(UpdateProfileRequest) returns (UpdateProfileResponse);
+  rpc ResolveUsername(ResolveUsernameRequest) returns (ResolveUsernameResponse);
+  rpc CheckUsernameAvailability(CheckUsernameAvailabilityRequest) returns (CheckUsernameAvailabilityResponse);
+}
+
+message Identity {
+  string id = 1;
+  string username = 2;
+  string display_name = 3;
+  string bio = 4;
+  string avatar_url = 5;
+  string phone_number = 6;
+  notjustdex.common.v1.Timestamp created_at = 8;
+}
+
+message CreateIdentityRequest {
+  string phone_number = 1;
+  string username = 2;
+  string display_name = 3;
+}
+
+message CreateIdentityResponse {
+  Identity identity = 1;
+  Wallet wallet = 2;
+}
+
+message GetIdentityRequest {
+  string identity_id = 1;
+}
+
+message GetIdentityResponse {
+  Identity identity = 1;
+  Wallet wallet = 2;
+}
+
+message UpdateProfileRequest {
+  string identity_id = 1;
+  string display_name = 2;
+  string bio = 3;
+  string avatar_url = 4;
+}
+
+message UpdateProfileResponse {
+  Identity identity = 1;
+}
+
+message ResolveUsernameRequest {
+  string username = 1;
+}
+
+message ResolveUsernameResponse {
+  Identity identity = 1;
+}
+
+message CheckUsernameAvailabilityRequest {
+  string username = 1;
+}
+
+message CheckUsernameAvailabilityResponse {
+  bool available = 1;
+}
+
+message Wallet {
+  string address = 1;
+  bool is_initialized = 2;
+}

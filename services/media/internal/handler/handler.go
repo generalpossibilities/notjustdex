@@ -1,6 +1,6 @@
 package handler
 
-import "github.com/dexchats/media/internal/service"
+import "github.com/notjustdex/media/internal/service"
 
 type MediaHandler struct {
 	svc *service.MediaService
