@@ -254,10 +254,3 @@ class SignedChallenge {
         timestamp: DateTime.parse(json['timestamp'] as String),
       );
 }
-
-class AuthenticationException implements Exception {
-  final String message;
-  const AuthenticationException(this.message);
-  @override
-  String toString() => 'AuthenticationException: $message';
-}
