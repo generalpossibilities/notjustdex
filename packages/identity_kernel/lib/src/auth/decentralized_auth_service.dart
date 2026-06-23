@@ -8,7 +8,6 @@ import '../models/profile.dart';
 import '../models/username.dart';
 import '../models/wallet.dart';
 import '../chain/an_identity_contract.dart';
-import '../chain/an_light_client.dart';
 import '../repositories/identity_repository.dart';
 import '../exceptions.dart';
 

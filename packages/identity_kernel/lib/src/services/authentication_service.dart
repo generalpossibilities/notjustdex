@@ -5,7 +5,6 @@ import '../auth/decentralized_auth_service.dart';
 import '../models/user_identity.dart';
 import '../models/username.dart';
 import '../chain/an_identity_contract.dart';
-import '../chain/an_light_client.dart';
 import '../repositories/identity_repository.dart';
 import '../exceptions.dart';
 

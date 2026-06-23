@@ -239,7 +239,6 @@ class AckiNackiClient {
   }
 
   static List<int> _derivePublicKey(List<int> privateKey) async {
-    final ed25519 = Ed25519();
     final keyPair = SimpleKeyPair(
       SimpleKeyPairData(
         privateKey: privateKey,
