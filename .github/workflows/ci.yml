@@ -21,7 +21,17 @@ jobs:
           flutter-version: 3.29.x
       - uses: bluefireteam/melos-action@v3
       - run: melos run gen
-      - run: melos run analyze
+      - name: Analyze each package individually
+        run: |
+          failed=false
+          for pkg in packages/*/; do
+            if [ -f "${pkg}pubspec.yaml" ]; then
+              name=$(basename $pkg)
+              echo "--- $name ---"
+              (cd "$pkg" && dart analyze . 2>&1) || { failed=true; echo "::error::$name failed"; }
+            fi
+          done
+          $failed && exit 1 || echo "All packages passed"
       - run: melos run test
 
   build:
