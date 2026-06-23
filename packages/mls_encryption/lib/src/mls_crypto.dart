@@ -50,8 +50,8 @@ class MlsCrypto {
     return HpkeCiphertext(
       encapsulatedKey: senderPub,
       nonce: nonce,
-      ciphertext: secretBox.cipherText,
-      tag: secretBox.mac,
+      ciphertext: Uint8List.fromList(secretBox.cipherText),
+      tag: Uint8List.fromList(secretBox.mac.bytes),
     );
   }
 
@@ -68,7 +68,7 @@ class MlsCrypto {
     final secretBox = SecretBox(
       ciphertext.ciphertext,
       nonce: ciphertext.nonce,
-      mac: ciphertext.tag,
+      mac: Mac(ciphertext.tag),
     );
 
     final plaintext = await _aesGcm.decrypt(
