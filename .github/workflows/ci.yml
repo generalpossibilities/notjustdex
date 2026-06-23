@@ -28,7 +28,13 @@ jobs:
             if [ -f "${pkg}pubspec.yaml" ]; then
               name=$(basename $pkg)
               echo "--- $name ---"
-              (cd "$pkg" && dart analyze . 2>&1) || { failed=true; echo "::error::$name failed"; }
+              output=$(cd "$pkg" && dart analyze . 2>&1) || {
+                failed=true
+                errors=$(echo "$output" | grep -E "^  (error|warning)" | head -3 | tr '\n' ';')
+                echo "::error title=$name::$errors"
+                echo "Full output:"
+                echo "$output"
+              }
             fi
           done
           $failed && exit 1 || echo "All packages passed"
