@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
+import 'package:http/http.dart' as http;
 
 /// IPFS client — upload and fetch content from any IPFS gateway/API.
 ///
@@ -26,31 +26,23 @@ class IpfsClient {
 
   /// Upload content bytes to IPFS. Returns CID string.
   Future<String> uploadBytes(List<int> bytes, {String? fileName}) async {
-    final client = HttpClient();
-    try {
-      final boundary = '----${DateTime.now().millisecondsSinceEpoch}';
-      final request = await client.postUrl(Uri.parse(_uploadEndpoint));
+    final request = http.MultipartRequest('POST', Uri.parse(_uploadEndpoint));
+    request.headers['Accept'] = 'application/json';
+    request.files.add(http.MultipartFile.fromBytes(
+      'file',
+      bytes,
+      filename: fileName ?? 'file',
+    ));
 
-      request.headers.contentType = ContentType('multipart', 'form-data',
-          parameters: {'boundary': boundary});
-      request.headers.set('Accept', 'application/json');
+    final streamed = await request.send();
+    final response = await http.Response.fromStream(streamed);
 
-      final body = _buildMultipartBody(boundary, bytes, fileName: fileName);
-      request.contentLength = body.length;
-      request.add(body);
-
-      final response = await request.close();
-      final responseBody = await response.transform(utf8.decoder).join();
-
-      if (response.statusCode != 200) {
-        throw IpfsException('Upload failed: HTTP ${response.statusCode}');
-      }
-
-      final json = jsonDecode(responseBody.split('\n').first) as Map<String, dynamic>;
-      return json['Hash'] as String;
-    } finally {
-      client.close();
+    if (response.statusCode != 200) {
+      throw IpfsException('Upload failed: HTTP ${response.statusCode}');
     }
+
+    final json = jsonDecode(response.body.split('\n').first) as Map<String, dynamic>;
+    return json['Hash'] as String;
   }
 
   /// Upload a JSON object to IPFS. Returns CID string.
@@ -65,18 +57,9 @@ class IpfsClient {
       final url = _gateways[_gatewayIndex % _gateways.length] + cid;
       _gatewayIndex++;
       try {
-        final client = HttpClient();
-        try {
-          final request = await client.getUrl(Uri.parse(url));
-          final response = await request.close();
-          if (response.statusCode == 200) {
-            return await response.fold<List<int>>(
-              <int>[],
-              (prev, chunk) => prev..addAll(chunk),
-            );
-          }
-        } finally {
-          client.close();
+        final response = await http.get(Uri.parse(url));
+        if (response.statusCode == 200) {
+          return response.bodyBytes.toList();
         }
       } catch (e) {
         if (i == _gateways.length - 1) rethrow;
@@ -94,23 +77,6 @@ class IpfsClient {
   /// Get a gateway URL for direct use (e.g., in Image.network).
   String gatewayUrl(String cid) {
     return _gateways[_gatewayIndex % _gateways.length] + cid;
-  }
-
-  List<int> _buildMultipartBody(
-    String boundary,
-    List<int> bytes, {
-    String? fileName,
-  }) {
-    final header = '--$boundary\r\n'
-        'Content-Disposition: form-data; name="file"'
-        '${fileName != null ? '; filename="$fileName"' : ''}\r\n'
-        'Content-Type: application/octet-stream\r\n\r\n';
-    final footer = '\r\n--$boundary--\r\n';
-
-    final headerBytes = utf8.encode(header);
-    final footerBytes = utf8.encode(footer);
-
-    return [...headerBytes, ...bytes, ...footerBytes];
   }
 }
 

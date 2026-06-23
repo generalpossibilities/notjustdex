@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:yaml/yaml.dart';
 
 /// App configuration — only feature flags, no Go service hosts.
@@ -20,19 +19,39 @@ class AppConfig {
   }
 
   static Future<AppConfig> load() async {
-    final fromDefine = AppConfig.fromDefine();
     try {
-      final file = File('config/features.yaml');
-      if (await file.exists()) {
-        final content = await file.readAsString();
-        final yaml = loadYaml(content) as YamlMap;
-        final map = yaml.cast<String, dynamic>();
-        return AppConfig(
-          features: FeatureFlags.fromJson(map),
-        );
-      }
-    } catch (_) {}
-    return fromDefine;
+      const yamlContent = '''
+feed:
+  enabled: true
+chat:
+  enabled: true
+mini_apps:
+  enabled: true
+notifications:
+  enabled: true
+creator_economy:
+  enabled: true
+search:
+  enabled: true
+moderation:
+  enabled: true
+media:
+  enabled: true
+analytics:
+  enabled: true
+dao:
+  enabled: false
+vault:
+  enabled: true
+''';
+      final yaml = loadYaml(yamlContent) as YamlMap;
+      final map = yaml.cast<String, dynamic>();
+      return AppConfig(
+        features: FeatureFlags.fromJson(map),
+      );
+    } catch (_) {
+      return AppConfig.fromDefine();
+    }
   }
 }
 

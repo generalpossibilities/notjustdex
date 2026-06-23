@@ -1,8 +1,7 @@
 import 'dart:convert';
-import 'dart:io';
-import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
 import 'package:cryptography/cryptography.dart';
+import 'package:http/http.dart' as http;
 
 /// Acki Nacki blockchain client via GraphQL API.
 ///
@@ -13,15 +12,15 @@ import 'package:cryptography/cryptography.dart';
 /// Balance: VMSHELL nanotokens (1 VMSHELL = 10^9 nanotokens)
 class AckiNackiClient {
   final String graphqlUrl;
-  final HttpClient _http;
+  final http.Client _http;
 
   static const String defaultEndpoint = 'https://mainnet.ackinacki.org/graphql';
   static const String testnetEndpoint = 'https://shellnet.ackinacki.org/graphql';
   static const int workchainId = 0;
 
-  AckiNackiClient({String? graphqlUrl})
+  AckiNackiClient({String? graphqlUrl, http.Client? httpClient})
       : graphqlUrl = graphqlUrl ?? defaultEndpoint,
-        _http = HttpClient()..connectionTimeout = const Duration(seconds: 30);
+        _http = httpClient ?? http.Client();
 
   void dispose() => _http.close();
 
@@ -194,18 +193,17 @@ class AckiNackiClient {
   /// Execute a GraphQL query/mutation.
   Future<Map<String, dynamic>> _graphQL(String query) async {
     final body = jsonEncode({'query': query});
-    final request = await _http.postUrl(Uri.parse(graphqlUrl));
-    request.headers.contentType = ContentType.json;
-    request.write(body);
-
-    final response = await request.close();
-    final responseBody = await response.transform(utf8.decoder).join();
+    final response = await _http.post(
+      Uri.parse(graphqlUrl),
+      headers: {'Content-Type': 'application/json'},
+      body: body,
+    );
 
     if (response.statusCode != 200) {
-      throw AnRpcException('HTTP ${response.statusCode}: $responseBody');
+      throw AnRpcException('HTTP ${response.statusCode}: ${response.body}');
     }
 
-    final decoded = jsonDecode(responseBody) as Map<String, dynamic>;
+    final decoded = jsonDecode(response.body) as Map<String, dynamic>;
     if (decoded['errors'] != null) {
       final errors = decoded['errors'] as List;
       throw AnRpcException('GraphQL error: ${errors.first['message']}');
