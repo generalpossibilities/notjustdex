@@ -125,8 +125,12 @@ class VaultService {
 
     await _localStorage.write(serialized);
 
-    if (signedMessage != null) {
+    // Always try to backup to chain + IPFS
+    // If chain is down, data stays local until next save
+    try {
       await _chainStorage.write(serialized);
+    } catch (_) {
+      // Graceful degradation — vault is still saved locally
     }
   }
 
@@ -163,6 +167,7 @@ class VaultService {
 
     _cache.add(entry);
     await _audit.logCreate(id, name);
+    await saveVault();
     return entry;
   }
 
@@ -180,6 +185,7 @@ class VaultService {
 
     _cache[index] = updated;
     await _audit.logUpdate(entry.id, entry.name);
+    await saveVault();
     return updated;
   }
 
@@ -192,6 +198,7 @@ class VaultService {
     final entry = _cache[index];
     _cache.removeAt(index);
     await _audit.logDelete(entryId, entry.name);
+    await saveVault();
   }
 
   VaultEntry? getEntry(String entryId) {

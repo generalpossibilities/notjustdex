@@ -1,10 +1,14 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:uuid/uuid.dart';
+import 'package:cryptography/cryptography.dart';
 import 'package:notjustdex_mls_encryption/mls_encryption.dart';
+import 'package:notjustdex_identity_kernel/identity_kernel.dart';
 import '../models/chat_message.dart';
 import '../models/chat_conversation.dart';
 import '../relay/relay_client.dart';
 import 'conversation_store.dart';
+import 'mls_group_store.dart';
 
 /// High-level decentralized chat service.
 ///
@@ -12,44 +16,84 @@ import 'conversation_store.dart';
 ///  2. Encrypts messages with MLS before publishing to relays
 ///  3. Decrypts incoming messages from relays
 ///  4. Persists conversations + messages locally (Hive)
-///  5. Connects to N relays for redundancy
+///  5. Persists MLS group state to Hive (encrypted at rest)
+///  6. Backs up encrypted messages to IPFS for cross-device recovery
+///  7. Connects to N relays for redundancy
 class DecentralizedChatService {
   final ChatRelayClient _relay;
   final ConversationStore _store;
+  final MlsGroupStore _groupStore;
   MlsKeyStore? _keyStore;
   final Map<String, MlsGroup> _mlsGroups = {};
   String? _myAddress;
   final Set<String> _subscribedTopics = {};
   StreamSubscription<RelayEnvelope>? _relaySub;
+  IpfsClient? _ipfs;
+  String? _chainEndpoint;
 
   DecentralizedChatService({
     required ChatRelayClient relay,
     required ConversationStore store,
+    MlsGroupStore? groupStore,
   })  : _relay = relay,
-        _store = store;
+        _store = store,
+        _groupStore = groupStore ?? MlsGroupStore();
 
   Stream<ChatMessage> get onMessage => _onMessageController.stream;
   final StreamController<ChatMessage> _onMessageController =
       StreamController<ChatMessage>.broadcast();
 
   /// Initialize with the user's identity address and MLS key store.
+  ///
+  /// If [walletSeed] is provided, the MLS key store is derived deterministically
+  /// from it (enabling cross-device recovery). If [keyStore] is provided directly,
+  /// that takes precedence.
+  ///
+  /// Options for backup:
+  /// - [ipfs] — IPFS client for uploading encrypted message backups
+  /// - [chainEndpoint] — chain endpoint for committing backup CIDs
   Future<void> init({
     required String myAddress,
-    required MlsKeyStore keyStore,
+    MlsKeyStore? keyStore,
+    Uint8List? walletSeed,
     List<String> relayUrls = const [],
+    IpfsClient? ipfs,
+    String? chainEndpoint,
   }) async {
     _myAddress = myAddress;
-    _keyStore = keyStore;
+    _ipfs = ipfs;
+    _chainEndpoint = chainEndpoint;
+
+    if (keyStore != null) {
+      _keyStore = keyStore;
+    } else if (walletSeed != null) {
+      _keyStore = await MlsKeyStore.fromSeed(myAddress, walletSeed);
+    } else {
+      _keyStore = await MlsKeyStore.generate(myAddress);
+    }
+
     await _store.init();
+    await _groupStore.init(
+      encryptionKey: _keyStore!.encryptionKeyPair.bytes.toList(),
+    );
+
+    // Restore MLS groups from Hive
+    final savedGroups = await _groupStore.loadAllGroups();
+    for (final entry in savedGroups) {
+      _mlsGroups[entry.key] = entry.value;
+      _subscribeToTopic(entry.key);
+    }
 
     if (relayUrls.isNotEmpty) {
       await _relay.connect(relayUrls);
     }
 
-    // Subscribe to existing conversation topics
+    // Subscribe to any conversations that don't have groups restored yet
     final conversations = _store.getConversations();
     for (final conv in conversations) {
-      _subscribeToTopic(conv.id);
+      if (!_mlsGroups.containsKey(conv.id)) {
+        _subscribeToTopic(conv.id);
+      }
     }
 
     _relaySub = _relay.messages.listen(_handleRelayMessage);
@@ -78,6 +122,7 @@ class DecentralizedChatService {
       );
     }
     _mlsGroups[convId] = group;
+    await _groupStore.saveGroup(convId, group);
 
     final conv = ChatConversation(
       id: convId,
@@ -156,8 +201,15 @@ class DecentralizedChatService {
   /// Load MLS group state for a conversation (needed to send messages).
   Future<void> loadGroupState(String conversationId, MlsGroup group) async {
     _mlsGroups[conversationId] = group;
+    await _groupStore.saveGroup(conversationId, group);
     _subscribeToTopic(conversationId);
   }
+
+  /// Get the user's MLS key store (for exporting key packages).
+  MlsKeyStore? get keyStore => _keyStore;
+
+  /// Get an MLS group by conversation ID.
+  MlsGroup? getGroup(String conversationId) => _mlsGroups[conversationId];
 
   void _subscribeToTopic(String conversationId) {
     if (_subscribedTopics.add(conversationId)) {

@@ -99,6 +99,47 @@ class MlsKeyStore {
     );
   }
 
+  static Future<MlsKeyStore> fromSeed(String userId, Uint8List walletSeed) async {
+    final encSeed = MlsCrypto.deriveKey(walletSeed, 'mls-encryption-v1');
+    final sigSeed = MlsCrypto.deriveKey(walletSeed, 'mls-signing-v1');
+    final encKeyPair = await MlsCrypto.generateKeyPairFromSeed(encSeed);
+    final sigKeyPair = await MlsCrypto.generateSigningKeyPairFromSeed(sigSeed);
+
+    return MlsKeyStore(
+      userId: userId,
+      encryptionKeyPair: encKeyPair,
+      signatureKeyPair: sigKeyPair,
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+    'user_id': userId,
+    'encryption_private_key': base64Url.encode(_encryptionKeyPair.bytes.toList()),
+    'encryption_public_key': base64Url.encode(_encryptionKeyPair.publicKey.bytes.toList()),
+    'signature_private_key': base64Url.encode(_signatureKeyPair.bytes.toList()),
+    'signature_public_key': base64Url.encode(_signatureKeyPair.publicKey.bytes.toList()),
+  };
+
+  factory MlsKeyStore.fromJson(Map<String, dynamic> json) => MlsKeyStore(
+    userId: json['user_id'] as String,
+    encryptionKeyPair: SimpleKeyPairData(
+      base64Url.decode(json['encryption_private_key'] as String),
+      publicKey: SimplePublicKey(
+        base64Url.decode(json['encryption_public_key'] as String),
+        type: KeyPairType.x25519,
+      ),
+      type: KeyPairType.x25519,
+    ),
+    signatureKeyPair: SimpleKeyPairData(
+      base64Url.decode(json['signature_private_key'] as String),
+      publicKey: SimplePublicKey(
+        base64Url.decode(json['signature_public_key'] as String),
+        type: KeyPairType.ed25519,
+      ),
+      type: KeyPairType.ed25519,
+    ),
+  );
+
   Future<MlsKeyPackage> get keyPackage async {
     if (_currentKeyPackage == null || _currentKeyPackage!.isExpired) {
       _currentKeyPackage = await MlsKeyPackage.generate(

@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
-import 'package:crypto/crypto.dart' show sha256;
+import 'package:crypto/crypto.dart' show sha256, Hmac;
 import 'package:cryptography/cryptography.dart';
 
 class MlsCrypto {
@@ -13,6 +13,21 @@ class MlsCrypto {
   static Future<SimpleKeyPairData> generateKeyPair() async {
     final keyPair = await _x25519.newKeyPair();
     return keyPair.extract();
+  }
+
+  static Future<SimpleKeyPairData> generateKeyPairFromSeed(Uint8List seed) async {
+    final keyPair = await _x25519.newKeyPairFromSeed(seed.toList());
+    return keyPair.extract();
+  }
+
+  static Future<SimpleKeyPairData> generateSigningKeyPairFromSeed(Uint8List seed) async {
+    final keyPair = await _ed25519.newKeyPairFromSeed(seed.toList());
+    return keyPair.extract();
+  }
+
+  static Uint8List deriveKey(Uint8List seed, String label) {
+    final hmac = Hmac(sha256, seed);
+    return Uint8List.fromList(hmac.convert(utf8.encode(label)).bytes);
   }
 
   static Future<SecretKey> deriveSharedSecret(
