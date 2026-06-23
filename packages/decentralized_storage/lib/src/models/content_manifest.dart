@@ -1,5 +1,3 @@
-import 'dart:convert';
-import 'dart:typed_data';
 
 /// Content manifest — the root of all content addressing.
 ///

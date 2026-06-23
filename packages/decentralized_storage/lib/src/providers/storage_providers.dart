@@ -107,7 +107,6 @@ class FilecoinProvider extends StorageProvider {
       );
 
       if (response.statusCode == 200) {
-        final data = response.body;
         // Extract deal ID from response
         return StorageReceipt(
           provider: name,

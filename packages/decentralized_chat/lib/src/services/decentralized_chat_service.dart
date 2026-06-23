@@ -1,6 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
-import 'package:crypto/crypto.dart';
 import 'package:uuid/uuid.dart';
 import 'package:notjustdex_mls_encryption/mls_encryption.dart';
 import '../models/chat_message.dart';
@@ -73,7 +71,6 @@ class DecentralizedChatService {
     // Create MLS group
     var group = MlsGroup.create(convId, _keyStore!);
     for (var i = 0; i < participantKeyPackages.length; i++) {
-      final addr = allParticipants[i + 1];
       group = group.addMember(
         participantKeyPackages[i],
         _myAddress!,

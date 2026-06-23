@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
-import 'package:crypto/crypto.dart';
 import 'package:cryptography/cryptography.dart' hide Hmac;
 import '../models/user_identity.dart';
 import '../models/profile.dart';
@@ -128,7 +127,7 @@ class AnIdentityContract {
           signature,
           publicKey: SimplePublicKey(pubKeyBytes, type: KeyPairType.ed25519),
         );
-        return await ed25519.verify(message, signature: sig) ?? false;
+        return await ed25519.verify(message, signature: sig);
       } catch (_) {
         return false;
       }

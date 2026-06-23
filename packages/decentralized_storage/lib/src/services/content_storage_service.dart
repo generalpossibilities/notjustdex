@@ -1,11 +1,8 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
-import 'package:crypto/crypto.dart';
-import 'package:uuid/uuid.dart';
 import 'package:notjustdex_identity_kernel/identity_kernel.dart';
 import '../models/content_manifest.dart';
-import '../providers/storage_providers.dart';
 import 'video_processor.dart';
 import 'storage_replicator.dart';
 
@@ -74,7 +71,7 @@ class ContentStorageService {
     final manifestJson = manifest.toJson();
     manifestJson['storage_receipts'] = receipts.map((r) => r.toJson()).toList();
     final manifestBytes = Uint8List.fromList(utf8.encode(jsonEncode(manifestJson)));
-    final manifestCid = await _ipfs.uploadBytes(manifestBytes);
+    await _ipfs.uploadBytes(manifestBytes);
 
     // 5. Store on chain
     await _contract.postContent(mediaCid, identityAddress);
@@ -96,7 +93,7 @@ class ContentStorageService {
     }
 
     // 1. Process video into HLS segments
-    final result = await _videoProcessor!.processVideo(
+    final result = await _videoProcessor.processVideo(
       videoBytes: videoBytes,
       originalFilename: originalFilename,
       options: processingOptions,
