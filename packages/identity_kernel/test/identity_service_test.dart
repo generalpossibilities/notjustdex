@@ -3,7 +3,21 @@ import 'package:test/test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:notjustdex_identity_kernel/identity_kernel.dart';
 
-class MockIdentityRepository extends Mock implements IdentityRepository {}
+class MockIdentityRepository extends Mock implements IdentityRepository {
+  @override
+  Future<UserIdentity?> getIdentity(String identityId) =>
+      super.noSuchMethod(
+        Invocation.method(#getIdentity, [identityId]),
+        returnValue: Future<UserIdentity?>.value(null),
+      ) as Future<UserIdentity?>;
+
+  @override
+  Future<void> saveIdentity(UserIdentity identity) =>
+      super.noSuchMethod(
+        Invocation.method(#saveIdentity, [identity]),
+        returnValue: Future<void>.value(),
+      ) as Future<void>;
+}
 
 class MockAnIdentityContract extends Mock implements AnIdentityContract {
   @override
