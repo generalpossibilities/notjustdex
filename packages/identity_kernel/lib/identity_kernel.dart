@@ -21,3 +21,17 @@ export 'src/bloc/identity_event.dart';
 export 'src/bloc/identity_state.dart';
 export 'src/exceptions.dart';
 export 'src/services/acki_nacki_client.dart';
+
+// Vault module
+export 'src/vault/vault_service.dart';
+export 'src/vault/models/vault_entry.dart';
+export 'src/vault/models/vault_entry_type.dart';
+export 'src/vault/models/vault_config.dart';
+export 'src/vault/crypto/key_derivation.dart';
+export 'src/vault/crypto/vault_crypto.dart';
+export 'src/vault/crypto/password_generator.dart';
+export 'src/vault/storage/vault_storage.dart';
+export 'src/vault/storage/vault_chain_storage.dart';
+export 'src/vault/storage/vault_local_storage.dart';
+export 'src/vault/services/vault_audit_service.dart';
+export 'src/vault/services/vault_backup_service.dart';

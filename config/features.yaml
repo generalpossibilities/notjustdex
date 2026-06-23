@@ -30,3 +30,6 @@ analytics:
 
 dao:
   enabled: false
+
+vault:
+  enabled: true

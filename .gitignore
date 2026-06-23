@@ -69,7 +69,4 @@ apps/web/web/assets/
 
 # AI tooling & artifacts
 .opencode/
-AGENTS.md
-ARCHITECTURE.md
-DECENTRALIZATION.md
 RESEARCH.md

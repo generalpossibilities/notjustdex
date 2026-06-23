@@ -47,6 +47,7 @@ class FeatureFlags {
   final bool media;
   final bool analytics;
   final bool dao;
+  final bool vault;
 
   const FeatureFlags({
     this.feed = true,
@@ -59,6 +60,7 @@ class FeatureFlags {
     this.media = true,
     this.analytics = true,
     this.dao = false,
+    this.vault = true,
   });
 
   static const production = FeatureFlags();
@@ -75,6 +77,7 @@ class FeatureFlags {
       media: json['media']?['enabled'] as bool? ?? true,
       analytics: json['analytics']?['enabled'] as bool? ?? true,
       dao: json['dao']?['enabled'] as bool? ?? false,
+      vault: json['vault']?['enabled'] as bool? ?? true,
     );
   }
 }
