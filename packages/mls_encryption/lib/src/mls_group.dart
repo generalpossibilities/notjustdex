@@ -26,7 +26,7 @@ class MlsGroup {
         _groupSecret = groupSecret;
 
   factory MlsGroup.create(String groupId, MlsKeyStore creatorKeys) {
-    final leafKey = MlsCrypto.hashRatchet(creatorKeys.encryptionPublicKey.bytes, 0);
+    final leafKey = MlsCrypto.hashRatchet(Uint8List.fromList(creatorKeys.encryptionPublicKey.bytes), 0);
 
     return MlsGroup._(
       groupId: groupId,
@@ -84,7 +84,7 @@ class MlsGroup {
           utf8.encode(message.senderId) +
           message.ciphertext.ciphertext.toList(),
     );
-    if (!await MlsCrypto.verify(toVerify, message.signature.bytes, sender.signaturePublicKey)) {
+    if (!await MlsCrypto.verify(toVerify, Uint8List.fromList(message.signature.bytes), sender.signaturePublicKey)) {
       throw MlsException.invalidSignature();
     }
 
@@ -100,7 +100,7 @@ class MlsGroup {
   MlsGroup addMember(MlsKeyPackage newMemberKey, String adminId, SimpleKeyPairData adminKeyPair) {
     if (newMemberKey.isExpired) throw MlsException.invalidKeyPackage();
 
-    final newLeafKey = MlsCrypto.hashRatchet(newMemberKey.encryptionPublicKey.bytes, 0);
+    final newLeafKey = MlsCrypto.hashRatchet(Uint8List.fromList(newMemberKey.encryptionPublicKey.bytes), 0);
     final newSecret = Uint8List.fromList(sha256.convert(
       Uint8List.fromList([
         ..._groupSecret.toList(),
