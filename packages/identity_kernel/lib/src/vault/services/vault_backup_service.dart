@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:math';
 import 'package:cryptography/cryptography.dart';
+import 'package:cryptography/dart.dart';
 import '../models/vault_entry.dart';
 
 class VaultBackupService {

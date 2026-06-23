@@ -1,5 +1,5 @@
 import 'dart:typed_data';
-import 'package:notjustdex_identity_kernel/notjustdex_identity_kernel.dart';
+import 'package:notjustdex_identity_kernel/identity_kernel.dart';
 import '../models/content_manifest.dart';
 
 /// Allocator: user chooses which backend to pay for.

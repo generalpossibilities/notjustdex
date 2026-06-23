@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:uuid/uuid.dart';
-import 'package:notjustdex_mls_encryption/notjustdex_mls_encryption.dart';
+import 'package:notjustdex_mls_encryption/mls_encryption.dart';
 import '../models/chat_message.dart';
 import '../models/chat_conversation.dart';
 import '../relay/relay_client.dart';
