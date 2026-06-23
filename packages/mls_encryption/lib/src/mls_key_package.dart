@@ -41,7 +41,7 @@ class MlsKeyPackage {
     final payload = Uint8List.fromList(
       utf8.encode(userId) + encryptionPublicKey.bytes.toList() + signaturePublicKey.bytes.toList(),
     );
-    return MlsCrypto.verify(payload, signature.bytes, signaturePublicKey);
+    return MlsCrypto.verify(payload, Uint8List.fromList(signature.bytes), signaturePublicKey);
   }
 
   bool get isExpired => DateTime.now().isAfter(expiresAt);
