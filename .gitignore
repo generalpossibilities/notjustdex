@@ -70,3 +70,13 @@ apps/web/web/assets/
 # AI tooling & artifacts
 .opencode/
 RESEARCH.md
+
+# Local-only docs (not synced to remote)
+AGENTS.md
+ARCHITECTURE.md
+DECENTRALIZATION.md
+
+# Local-only logos
+njd-logo.jpg
+dexchats-logo.jpg
+njd-logo.webp
