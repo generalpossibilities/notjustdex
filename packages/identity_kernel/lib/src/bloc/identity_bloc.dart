@@ -3,9 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'identity_event.dart';
 import 'identity_state.dart';
 import '../services/identity_service.dart';
-import '../services/wallet_service.dart';
 import '../services/authentication_service.dart';
-import '../exceptions.dart';
 
 /// Identity bloc — fully decentralized, no Go service dependency.
 ///
@@ -16,16 +14,13 @@ import '../exceptions.dart';
 ///   loadIdentity        → fetch from chain (fallback to local cache)
 class IdentityBloc extends Bloc<IdentityEvent, IdentityState> {
   final IdentityService _identityService;
-  final WalletService _walletService;
   final AuthenticationService _authService;
   StreamSubscription? _identitySubscription;
 
   IdentityBloc({
     required IdentityService identityService,
-    required WalletService walletService,
     required AuthenticationService authService,
   })  : _identityService = identityService,
-        _walletService = walletService,
         _authService = authService,
         super(const IdentityInitial()) {
     on<RegisterWithPasskey>(_onRegisterWithPasskey);

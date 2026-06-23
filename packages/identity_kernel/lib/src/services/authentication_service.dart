@@ -16,11 +16,9 @@ class AuthenticationService {
 
   AuthenticationService({
     required AnIdentityContract contract,
-    required AnLightClient lightClient,
     required IdentityRepository identityRepo,
   }) : _decentralized = DecentralizedAuthService(
           contract: contract,
-          lightClient: lightClient,
           identityRepo: identityRepo,
         );
 
@@ -77,15 +75,13 @@ class AuthenticationService {
 
   /// Send phone verification (decentralized — uses any available gateway).
   Future<String> sendPhoneVerification(String phoneNumber) async {
-    final hash = _hashPhone(phoneNumber);
     await Future.delayed(const Duration(milliseconds: 200));
     return 'code_sent';
   }
 
   /// Verify phone code locally.
   Future<bool> verifyPhone(String phoneNumber, String code) async {
-    final hash = _hashPhone(phoneNumber);
-    return _decentralized.verifyPhone(phoneHash: hash, verificationCode: code);
+    return _decentralized.verifyPhone(phoneHash: _hashPhone(phoneNumber), verificationCode: code);
   }
 
   Future<void> logout() => _decentralized.logout();

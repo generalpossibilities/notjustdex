@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:math';
 import 'package:cryptography/cryptography.dart';
 import '../models/vault_entry.dart';
-import '../crypto/vault_crypto.dart';
 
 class VaultBackupService {
   Future<String> exportBackup({

@@ -1,9 +1,6 @@
-import 'dart:convert';
 import 'dart:math';
 import 'package:crypto/crypto.dart' as crypto;
 import '../services/wallet_service.dart';
-import '../services/acki_nacki_client.dart';
-import '../exceptions.dart';
 import 'models/vault_entry.dart';
 import 'models/vault_config.dart';
 import 'models/vault_entry_type.dart';

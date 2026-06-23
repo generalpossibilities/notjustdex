@@ -23,7 +23,6 @@ import '../exceptions.dart';
 /// No JWT, no auth server, no centralized dependency.
 class DecentralizedAuthService {
   final AnIdentityContract _contract;
-  final AnLightClient _lightClient;
   final IdentityRepository _identityRepo;
 
   /// The current signed session challenge (null = not authenticated)
@@ -34,10 +33,8 @@ class DecentralizedAuthService {
 
   DecentralizedAuthService({
     required AnIdentityContract contract,
-    required AnLightClient lightClient,
     required IdentityRepository identityRepo,
   })  : _contract = contract,
-        _lightClient = lightClient,
         _identityRepo = identityRepo;
 
   bool get isAuthenticated => _session != null;

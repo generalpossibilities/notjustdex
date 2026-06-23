@@ -1,8 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:crypto/crypto.dart';
 import '../models/profile.dart';
-import '../models/user_identity.dart';
-import '../models/username.dart';
 import '../chain/an_identity_contract.dart';
 import 'ipfs_client.dart';
 import '../exceptions.dart';

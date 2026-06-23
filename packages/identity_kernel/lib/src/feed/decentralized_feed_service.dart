@@ -1,10 +1,6 @@
 import 'dart:async';
-import 'dart:convert';
-import 'package:crypto/crypto.dart';
 import '../chain/an_identity_contract.dart';
-import '../chain/an_light_client.dart';
 import '../ipfs/ipfs_client.dart';
-import '../models/user_identity.dart';
 
 /// FeedItem from decentralized sources (chain + IPFS).
 class FeedItemData {
@@ -81,17 +77,14 @@ class FeedItemData {
 ///   3. Local scoring (time decay + engagement weights)
 class DecentralizedFeedService {
   final AnIdentityContract _identityContract;
-  final AnLightClient _lightClient;
   final IpfsClient _ipfs;
   final List<FeedItemData> _items = [];
   StreamSubscription? _contentSubscription;
 
   DecentralizedFeedService({
     required AnIdentityContract identityContract,
-    required AnLightClient lightClient,
     required IpfsClient ipfs,
   })  : _identityContract = identityContract,
-        _lightClient = lightClient,
         _ipfs = ipfs;
 
   List<FeedItemData> get items => List.unmodifiable(_items);

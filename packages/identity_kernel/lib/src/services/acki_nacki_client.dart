@@ -228,7 +228,6 @@ class AckiNackiClient {
   }
 
   static Future<List<int>> _ed25519Sign(List<int> message, List<int> privateKey) async {
-    final ed25519 = Ed25519();
     final keyPair = SimpleKeyPair(
       SimpleKeyPairData(
         privateKey: privateKey,
