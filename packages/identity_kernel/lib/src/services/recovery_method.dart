@@ -4,7 +4,6 @@ import 'dart:typed_data';
 import 'package:crypto/crypto.dart' show sha256, Hmac;
 import 'package:cryptography/cryptography.dart' hide Hmac;
 import '../chain/an_identity_contract.dart';
-import '../models/user_identity.dart';
 
 /// Credentials resolved by a recovery method.
 ///
