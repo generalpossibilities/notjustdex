@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:math';
+import 'dart:typed_data';
 import 'package:hive/hive.dart';
 import 'package:cryptography/cryptography.dart';
 import 'package:notjustdex_mls_encryption/mls_encryption.dart';

@@ -4,7 +4,6 @@ import 'package:crypto/crypto.dart' show sha256, Hmac;
 import 'package:notjustdex_identity_kernel/identity_kernel.dart';
 import 'package:notjustdex_mls_encryption/mls_encryption.dart';
 import '../models/chat_message.dart';
-import '../models/chat_conversation.dart';
 import 'conversation_store.dart';
 
 /// Encrypted chat message backup to IPFS with chain-indexed CIDs.
@@ -26,6 +25,7 @@ class ChatBackupService {
   final AnIdentityContract _contract;
   final String _myAddress;
   final String _encryptionLabel = 'chat-backup-v1';
+  // ignore: unused_field
   final int _messagesPerBackup;
 
   ChatBackupService({

@@ -1,6 +1,4 @@
 import 'dart:async';
-import 'dart:convert';
-import 'package:crypto/crypto.dart' show sha256;
 import '../chain/an_identity_contract.dart';
 import '../ipfs/ipfs_client.dart';
 

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:typed_data';
 import 'package:uuid/uuid.dart';
 import 'package:cryptography/cryptography.dart';
 import 'package:notjustdex_mls_encryption/mls_encryption.dart';
@@ -28,7 +29,9 @@ class DecentralizedChatService {
   String? _myAddress;
   final Set<String> _subscribedTopics = {};
   StreamSubscription<RelayEnvelope>? _relaySub;
+  // ignore: unused_field
   IpfsClient? _ipfs;
+  // ignore: unused_field
   String? _chainEndpoint;
 
   DecentralizedChatService({

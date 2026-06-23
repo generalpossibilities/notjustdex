@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 import '../chain/an_identity_contract.dart';
 import '../ipfs/ipfs_client.dart';
 import '../vault/services/vault_backup_service.dart';
@@ -69,7 +70,9 @@ import 'pin_manager.dart';
 class RecoveryOrchestrator {
   final AnIdentityContract _contract;
   final IpfsClient _ipfs;
+  // ignore: unused_field
   final WalletService _walletService;
+  // ignore: unused_field
   final VaultBackupService _vaultBackup;
 
   RecoveryOrchestrator({
@@ -111,8 +114,8 @@ class RecoveryOrchestrator {
       final identity = await _contract.getIdentity(address);
       if (identity != null) {
         result.identityRestored = true;
-        result.username = identity.username.name;
-        _emit('identity', '✅ Identity restored: @${identity.username.name}', 0.15);
+        result.username = identity.username.value;
+        _emit('identity', '✅ Identity restored: @${identity.username.value}', 0.15);
       } else {
         _emit('identity', '⚠️ Identity not found on chain', 0.15);
       }
@@ -126,7 +129,7 @@ class RecoveryOrchestrator {
       int restored = 0;
       for (final cid in chatBackupCids) {
         try {
-          final blob = await _ipfs.fetchBytes(cid);
+          await _ipfs.fetchBytes(cid);
           result.chatBlobsDownloaded++;
         } catch (_) {
           result.chatFailures++;

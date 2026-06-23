@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 import 'package:crypto/crypto.dart' show sha256, Hmac;
-import 'package:cryptography/cryptography.dart';
+import 'package:cryptography/cryptography.dart' hide Hmac;
 
 class MlsCrypto {
   static final _ed25519 = Ed25519();
