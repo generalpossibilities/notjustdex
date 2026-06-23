@@ -129,7 +129,7 @@ class ContentStorageService {
         final bytes = await _ipfs.fetchBytes(cid);
         final receipts = await _replicator.replicate(
           contentCid: cid,
-          bytes: bytes,
+          bytes: Uint8List.fromList(bytes),
           mimeType: 'video/MP2T',
           policy: replicationPolicy,
         );

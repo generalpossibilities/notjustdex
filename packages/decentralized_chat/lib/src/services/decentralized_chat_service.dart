@@ -168,7 +168,7 @@ class DecentralizedChatService {
     }
   }
 
-  void _handleRelayMessage(RelayEnvelope envelope) {
+  Future<void> _handleRelayMessage(RelayEnvelope envelope) async {
     if (_myAddress == null) return;
 
     // Don't process our own messages
@@ -179,7 +179,7 @@ class DecentralizedChatService {
 
     try {
       final mlsMsg = MlsMessage.fromJson(envelope.payload);
-      final plaintext = group.decryptMessage(mlsMsg, _keyStore!.encryptionKeyPair);
+      final plaintext = await group.decryptMessage(mlsMsg, _keyStore!.encryptionKeyPair);
 
       final msg = ChatMessage(
         id: 'msg_${const Uuid().v4().replaceAll('-', '')}',

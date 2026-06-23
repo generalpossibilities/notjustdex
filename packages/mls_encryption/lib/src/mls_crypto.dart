@@ -76,7 +76,7 @@ class MlsCrypto {
       secretKey: sharedSecret,
     );
 
-    return plaintext;
+    return Uint8List.fromList(plaintext);
   }
 
   static Future<Signature> sign(
