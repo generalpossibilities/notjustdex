@@ -64,7 +64,7 @@ class MlsKeyPackage {
       type: KeyPairType.ed25519,
     ),
     signature: Signature(
-      Uint8List.fromList(base64Url.decode(json['signature'] as String)),
+      signature: Uint8List.fromList(base64Url.decode(json['signature'] as String)),
       publicKey: null,
     ),
     expiresAt: DateTime.parse(json['expires_at'] as String),

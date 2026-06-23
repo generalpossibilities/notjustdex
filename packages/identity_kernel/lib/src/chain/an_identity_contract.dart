@@ -125,7 +125,7 @@ class AnIdentityContract {
       final ed25519 = Ed25519();
       try {
         final sig = Signature(
-          signature,
+          signature: signature,
           publicKey: SimplePublicKey(pubKeyBytes, type: KeyPairType.ed25519),
         );
         return await ed25519.verify(message, sig);

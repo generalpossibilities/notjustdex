@@ -204,7 +204,7 @@ class MpcWalletRepository implements WalletRepository {
   Future<bool> _ed25519Verify(List<int> message, List<int> signature, List<int> publicKey) async {
     try {
       final ed25519 = Ed25519();
-      final sig = Signature(signature, publicKey: SimplePublicKey(publicKey, type: KeyPairType.ed25519));
+      final sig = Signature(signature: signature, publicKey: SimplePublicKey(publicKey, type: KeyPairType.ed25519));
       return await ed25519.verify(message, sig);
     } catch (_) {
       return false;

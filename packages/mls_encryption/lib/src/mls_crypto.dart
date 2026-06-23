@@ -21,7 +21,7 @@ class MlsCrypto {
   ) async {
     final sharedSecret = await _x25519.sharedSecretKey(
       keyPair: SimpleKeyPairData(
-        privateKey.privateKey,
+        privateKey.privateKeyBytes!,
         publicKey: privateKey.publicKey,
         type: KeyPairType.x25519,
       ),
