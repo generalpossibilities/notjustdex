@@ -134,6 +134,23 @@ class AnIdentityContract {
     });
   }
 
+  /// Resolve identity by phone hash. Null = chain-down or not found.
+  ///
+  /// The phone hash is SHA-256 of the E.164 number, committed at registration.
+  /// Only the hash lives on chain — the raw phone number is never stored.
+  /// This is purely a lookup mechanism, not an identity anchor.
+  Future<UserIdentity?> resolveByPhoneHash(String phoneHash) async {
+    return _safeQuery(() async {
+      final result = await _client.query(
+        contractAddress: _contractAddress,
+        method: 'resolveByPhoneHash',
+        args: {'phoneHash': phoneHash},
+      );
+      if (result == null) return null;
+      return _identityFromChainData(result);
+    });
+  }
+
   /// Follow another identity (on-chain tx). False = chain-down.
   Future<bool> follow(String identityAddress, String targetAddress) async {
     return _safeTransaction(() async {

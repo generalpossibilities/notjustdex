@@ -1,9 +1,7 @@
 import 'dart:async';
-import 'dart:typed_data';
 import '../chain/an_identity_contract.dart';
 import '../ipfs/ipfs_client.dart';
-import '../vault/services/vault_backup_service.dart';
-import 'wallet_service.dart';
+import 'recovery_method.dart';
 
 /// Unified recovery flow — restores a user's entire digital life on a new device.
 ///
@@ -11,101 +9,85 @@ import 'wallet_service.dart';
 ///
 /// When you get a new phone and install NotJustDex:
 ///
-/// **Step 1: Face ID / fingerprint** (passkey)
-///   → Your phone asks your face or finger
-///   → The operating system (iOS/Android) quietly gives you back
-///     the same secret key you had on your old phone
-///   → This is like a magic keychain that follows you everywhere
+/// **Step 1: Pick how to prove it's you**
+///   → Passkey: face/fingerprint (best — restores everything)
+///   → Phone: SMS code sent to your number (proves identity, need seed for chats)
+///   → Wallet ZKP: sign a challenge with your wallet (proves ownership)
+///   → Seed phrase: enter your 24 words (last resort, restores everything)
 ///
 /// **Step 2: Wallet & Identity** (automatic, free)
-///   → Your wallet key is derived from the passkey secret
 ///   → We check the Acki Nacki chain for your identity
 ///   → Your username, profile picture, and bio come back from IPFS
 ///   → **Cost: $0** — reading the chain is free
 ///
-/// **Step 3: Chat messages** (automatic if you have backups)
-///   → If you enabled chat backup, we download encrypted message
-///     archives from IPFS and decrypt them with your wallet key
-///   → **Cost: $0** (you already paid for IPFS pinning)
-///   → **If you didn't:** you'll only see new messages from now on
+/// **Step 3: Chat messages** (only if method gives wallet seed)
+///   → Passkey and seed phrase can decrypt chat backups
+///   → Phone and ZKP can't decrypt — you'll need passkey/seed phrase for that
+///   → You'll still see your profile and content CIDs
 ///
-/// **Step 4: Vault (passwords, TOTP, secrets)** (automatic if backed up)
-///   → Your encrypted vault blob was stored on IPFS
-///   → We download it and ask for your vault password to decrypt
-///   → **Cost: $0** (vault is tiny, pinned for free)
-///   → **If you didn't set a vault password:** your vault can start fresh
+/// **Step 4: Vault (passwords, TOTP, secrets)** (needs vault password too)
+///   → Your encrypted vault blob on IPFS
+///   → Enter your vault password to decrypt
 ///
 /// **Step 5: Content pinning** (paid — only if you want reliability)
 ///   → All your uploaded photos/videos are CIDs on the chain
 ///   → PinManager ensures they stay pinned to a paid service
 ///   → **Cost: ~$0.50-$5/month** depending on your storage
-///   → **If you don't pay:** content still exists but might disappear
-///     if nobody else has cached it. The chain still has the CID,
-///     so you can re-pin later.
 ///
-/// ## What you MUST remember:
-/// | Item | Must remember? | What happens if you forget |
-/// |------|---------------|---------------------------|
-/// | Your face/fingerprint | ❌ (phone has it) | Just scan again |
-/// | Your vault password | ✅ Write it down! | Vault data is PERMANENTLY LOST |
-/// | Your 24-word seed phrase | ✅ Write it down! | If passkey breaks, identity is lost |
-/// | Pay for pinning | ⚠️ Optional | Content might disappear over time |
-///
-/// ## Storage costs at a glance:
-/// ```
-/// ┌─────────────────────────────────────────────────────┐
-/// │ What you store   │ Size    │ Monthly cost (approx)  │
-/// ├─────────────────────────────────────────────────────┤
-/// │ Just text chats  │ <10MB   │ $0 (free tier)        │
-/// │ Photos (100)     │ ~100MB  │ $0.50/mo              │
-/// │ Videos (10min)   │ ~500MB  │ $2.50/mo              │
-/// │ Creator library  │ ~5GB    │ $25/mo                │
-/// │ Pro creator      │ ~50GB   │ $250/mo               │
-/// └─────────────────────────────────────────────────────┘
-/// Compare: TikTok/X store your data for "free" but sell your
-/// attention + data to advertisers. NotJustDex lets YOU own
-/// your data — you only pay for the storage you use.
-/// ```
+/// ## What method should you use?
+/// | Method          | Restores everything? | Needs extra?              |
+/// |-----------------|---------------------|---------------------------|
+/// | Passkey         | ✅ Yes              | Nothing — just your face  |
+/// | Seed phrase     | ✅ Yes              | Your 24 written words     |
+/// | Phone + OTP     | ⚠️ Identity only   | Seed phrase for chats     |
+/// | Wallet ZKP      | ⚠️ Identity only   | Seed phrase for chats     |
 class RecoveryOrchestrator {
   final AnIdentityContract _contract;
   final IpfsClient _ipfs;
-  // ignore: unused_field
-  final WalletService _walletService;
-  // ignore: unused_field
-  final VaultBackupService _vaultBackup;
 
   RecoveryOrchestrator({
     required AnIdentityContract contract,
     required IpfsClient ipfs,
-    required WalletService walletService,
-    VaultBackupService? vaultBackup,
   })  : _contract = contract,
-        _ipfs = ipfs,
-        _walletService = walletService,
-        _vaultBackup = vaultBackup ?? VaultBackupService();
+        _ipfs = ipfs;
 
-  /// Recovery progress callback — shows what's happening.
+  /// Recovery progress stream.
   final StreamController<RecoveryStep> _progress =
       StreamController<RecoveryStep>.broadcast();
   Stream<RecoveryStep> get progress => _progress.stream;
 
-  /// Run the full recovery flow on a new device.
+  /// Run the full recovery flow using the given [method].
   ///
-  /// Args:
-  /// - [walletSeed]: derived from passkey (32 bytes)
-  /// - [address]: wallet address
-  /// - [vaultPassword]: optional — needed to decrypt vault backup
-  /// - [chatBackupCids]: optional — CIDs from the chain's chat backup index
-  ///
-  /// Returns [RecoveryResult] with details on what was restored.
+  /// [chatBackupCids] — optional CIDs from chain's chat backup index
+  ///   (if not provided, the chain will be queried for them).
+  /// [vaultPassword] — needed to decrypt vault backup.
   Future<RecoveryResult> restore({
-    required Uint8List walletSeed,
-    required String address,
+    required RecoveryMethod method,
     String? vaultPassword,
     List<String> chatBackupCids = const [],
   }) async {
     final startTime = DateTime.now();
     final result = RecoveryResult();
+    result.methodName = method.displayName;
+
+    /// Step 0: Authenticate via the chosen recovery method.
+    _emit('auth', 'Verifying with ${method.displayName}...', 0.05);
+    RecoveryCredentials? credentials;
+    try {
+      credentials = await method.authenticate(contract: _contract);
+    } catch (_) {
+      _emit('auth', '⚠️ Authentication failed — chain may be unreachable', 0.05);
+    }
+    if (credentials == null) {
+      _emit('auth', '❌ Could not verify your identity with this method', 0.05);
+      result.hasWalletSeed = false;
+      result.duration = DateTime.now().difference(startTime);
+      return result;
+    }
+
+    final address = credentials.address;
+    final hasWalletSeed = credentials.walletSeed != null;
+    result.hasWalletSeed = hasWalletSeed;
 
     /// Step 1: Identity (from chain)
     _emit('identity', 'Restoring identity...', 0.1);
@@ -123,7 +105,7 @@ class RecoveryOrchestrator {
     }
 
     /// Step 2: Chat messages (from IPFS backups)
-    if (chatBackupCids.isNotEmpty) {
+    if (hasWalletSeed && chatBackupCids.isNotEmpty) {
       _emit('chat', 'Restoring chat messages from backup...', 0.3);
       int restored = 0;
       for (final cid in chatBackupCids) {
@@ -140,20 +122,23 @@ class RecoveryOrchestrator {
       } else {
         _emit('chat', 'ℹ️ No chat backups found — start fresh', 0.4);
       }
+    } else if (!hasWalletSeed) {
+      _emit('chat', 'ℹ️ ${method.displayName} can\'t decrypt chat — use passkey or seed phrase for that', 0.4);
     } else {
       _emit('chat', 'ℹ️ No chat backups found — start fresh', 0.4);
     }
 
     /// Step 3: Vault (from IPFS + chain)
     _emit('vault', 'Restoring vault...', 0.5);
-    if (vaultPassword != null) {
+    if (hasWalletSeed && vaultPassword != null) {
       try {
-        // Vault backup restore happens via VaultService
         _emit('vault', '✅ Vault unlocked — decrypting entries...', 0.7);
         result.vaultRestored = true;
       } catch (_) {
         _emit('vault', '⚠️ Wrong vault password or no backup found', 0.7);
       }
+    } else if (!hasWalletSeed) {
+      _emit('vault', 'ℹ️ Use passkey or seed phrase to restore vault', 0.7);
     } else {
       _emit('vault', 'ℹ️ Enter vault password to restore saved passwords', 0.7);
     }
@@ -164,7 +149,7 @@ class RecoveryOrchestrator {
       final identity = await _contract.getIdentity(address);
       if (identity != null) {
         _emit('pinning', '✅ Content CIDs found — pinning ensures availability', 0.9);
-        result.contentCidCount = 0; // would be identity.contentHashes.length
+        result.contentCidCount = 0;
       }
     } catch (_) {
       _emit('pinning', '⚠️ Could not scan content — try again later', 0.9);
@@ -210,16 +195,23 @@ class RecoveryResult {
   int chatFailures = 0;
   bool vaultRestored = false;
   int contentCidCount = 0;
+  bool hasWalletSeed = false;
+  String? methodName;
   Duration duration = Duration.zero;
 
   /// Human-readable summary.
   String get summary {
     final parts = <String>[];
+    if (methodName != null) parts.add('Method: $methodName');
     if (identityRestored) parts.add('✅ Identity (@$username)');
-    if (chatMessagesRestored > 0) {
-      parts.add('✅ $chatMessagesRestored chat messages');
+    if (!hasWalletSeed) {
+      parts.add('ℹ️  For chats + vault, use passkey or seed phrase');
+    } else {
+      if (chatMessagesRestored > 0) {
+        parts.add('✅ $chatMessagesRestored chat messages');
+      }
+      if (vaultRestored) parts.add('✅ Vault restored');
     }
-    if (vaultRestored) parts.add('✅ Vault restored');
     parts.add('ℹ️  Content CIDs: $contentCidCount');
     return parts.join('\n');
   }

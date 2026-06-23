@@ -25,6 +25,7 @@ export 'src/services/acki_nacki_client.dart';
 // Pin Manager + Recovery
 export 'src/services/pin_manager.dart';
 export 'src/services/recovery_orchestrator.dart';
+export 'src/services/recovery_method.dart';
 
 // Vault module
 export 'src/vault/vault_service.dart';
