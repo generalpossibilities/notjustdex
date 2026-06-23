@@ -4,7 +4,6 @@ import '../chain/an_identity_contract.dart';
 import '../ipfs/ipfs_client.dart';
 import '../vault/services/vault_backup_service.dart';
 import 'wallet_service.dart';
-import 'pin_manager.dart';
 
 /// Unified recovery flow — restores a user's entire digital life on a new device.
 ///

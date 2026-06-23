@@ -1,8 +1,6 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:typed_data';
 import 'package:uuid/uuid.dart';
-import 'package:cryptography/cryptography.dart';
 import 'package:notjustdex_mls_encryption/mls_encryption.dart';
 import 'package:notjustdex_identity_kernel/identity_kernel.dart';
 import '../models/chat_message.dart';
@@ -77,7 +75,7 @@ class DecentralizedChatService {
 
     await _store.init();
     await _groupStore.init(
-      encryptionKey: _keyStore!.encryptionKeyPair.bytes.toList(),
+      encryptionKey: Uint8List.fromList(_keyStore!.encryptionKeyPair.bytes),
     );
 
     // Restore MLS groups from Hive
