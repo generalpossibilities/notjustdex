@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'src/shell/home_shell.dart';
 import 'src/onboarding/welcome_page.dart';
 import 'src/onboarding/phone_entry_page.dart';
@@ -14,9 +15,12 @@ import 'src/core/modules/discover_module.dart';
 import 'src/core/modules/notifications_module.dart';
 import 'src/core/modules/profile_module.dart';
 import 'src/core/services/session_service.dart';
+import 'src/core/config/service_locator.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Hive.initFlutter();
+  await ServiceLocator.instance.init();
   runApp(const NotJustDexApp());
 }
 
@@ -55,10 +59,13 @@ class _NotJustDexAppState extends State<NotJustDexApp> {
   List<AppModule> _createModules() {
     return [
       FeedModule(),
-      ChatModule(),
+      ChatModule(config: ServiceLocator.instance.config),
       DiscoverModule(),
       NotificationsModule(),
-      ProfileModule(),
+      ProfileModule(
+        username: _session.username != null ? '@${_session.username}' : null,
+        displayName: _session.displayName,
+      ),
     ];
   }
 
@@ -84,7 +91,6 @@ class _NotJustDexAppState extends State<NotJustDexApp> {
 
   GoRouter _buildRouter() {
     final baseRoutes = [
-      // If checking session, show no route (splash will handle)
       GoRoute(
         path: '/',
         builder: (_, __) {
@@ -92,7 +98,6 @@ class _NotJustDexAppState extends State<NotJustDexApp> {
             return const _SplashScreen();
           }
           if (_hasSession) {
-            // Already logged in — go to home
             WidgetsBinding.instance.addPostFrameCallback((_) {
               context.go('/home');
             });
@@ -150,7 +155,6 @@ class _NotJustDexAppState extends State<NotJustDexApp> {
   }
 }
 
-/// Brief splash while checking for existing session.
 class _SplashScreen extends StatelessWidget {
   const _SplashScreen();
 
@@ -173,7 +177,6 @@ class _SplashScreen extends StatelessWidget {
   }
 }
 
-// Browser page re-export for the router
 class BrowserPage extends StatelessWidget {
   final String initialUrl;
   const BrowserPage({super.key, required this.initialUrl});
@@ -183,17 +186,15 @@ class BrowserPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: Text(initialUrl)),
       body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.language, size: 64),
-            const SizedBox(height: 16),
-            Text('Browser module not connected',
-                style: Theme.of(context).textTheme.titleMedium),
-            const SizedBox(height: 8),
-            Text(initialUrl, style: const TextStyle(color: Colors.grey)),
-          ],
-        ),
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const Icon(Icons.language, size: 64),
+          const SizedBox(height: 16),
+          Text('Browser module not connected',
+              style: Theme.of(context).textTheme.titleMedium),
+          const SizedBox(height: 8),
+          Text(initialUrl, style: const TextStyle(color: Colors.grey)),
+        ],
       ),
     );
   }

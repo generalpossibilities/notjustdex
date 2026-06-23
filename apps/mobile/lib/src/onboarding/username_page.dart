@@ -1,7 +1,10 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import '../core/services/users_client.dart';
-import '../core/services/auth_client.dart';
+import 'package:crypto/crypto.dart';
+import 'package:cryptography/cryptography.dart';
+import '../core/services/session_service.dart';
+import '../core/services/passkey_service.dart';
 
 class UsernamePage extends StatefulWidget {
   final String phoneNumber;
@@ -15,6 +18,7 @@ class UsernamePage extends StatefulWidget {
 class _UsernamePageState extends State<UsernamePage> {
   final _usernameController = TextEditingController();
   final _displayNameController = TextEditingController();
+  final _passkeyService = PasskeyService();
   bool _isAvailable = false;
   bool _isChecking = false;
   bool _isCreating = false;
@@ -126,27 +130,31 @@ class _UsernamePageState extends State<UsernamePage> {
     setState(() { _isCreating = true; _errorMessage = ''; });
 
     try {
-      // 1. Register with users service
-      final usersClient = UsersClient();
-      final result = await usersClient.createUser(
-        widget.phoneNumber,
-        _usernameController.text.trim(),
-        _displayNameController.text.trim(),
+      // 1. Create passkey (WebAuthn biometric credential)
+      final passkey = await _passkeyService.createCredential(
+        userId: _usernameController.text.trim(),
+        userName: _displayNameController.text.trim(),
+        options: {},
       );
+      final credentialId = passkey[0];
 
-      final userId = result['user']['id'] as String;
+      // 2. Derive wallet key from passkey credential
+      //    This is deterministic — same passkey always produces same wallet
+      final walletSeed = sha256.convert(utf8.encode('notjustdex_wallet_$credentialId')).bytes;
+      final ed25519 = Ed25519();
+      final keyPair = await ed25519.newKeyPairFromSeed(walletSeed);
+      final keyPairData = await keyPair.extract();
+      final address = sha256.convert(keyPairData.publicKey.bytes).toString().substring(0, 40);
 
-      // 2. Register passkey silently
-      // In production: use PasskeyService.createCredential()
-      // Stub: simulate passkey creation delay
-      await Future.delayed(const Duration(milliseconds: 800));
-
-      // 3. Create wallet silently (already done by users service)
-      final walletAddr = result['wallet']['address'] as String;
-
-      // 4. Link wallet to auth service
-      final authClient = AuthClient();
-      await authClient.linkWallet(userId, walletAddr);
+      // 3. Store session locally
+      final session = SessionService();
+      await session.saveSession(
+        token: address,
+        userId: address,
+        username: _usernameController.text.trim(),
+        displayName: _displayNameController.text.trim(),
+        phoneNumber: widget.phoneNumber,
+      );
 
       if (mounted) context.go('/home');
     } catch (e) {

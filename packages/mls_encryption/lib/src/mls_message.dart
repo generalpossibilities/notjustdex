@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:typed_data';
+import 'package:cryptography/cryptography.dart';
 import 'mls_crypto.dart';
 
 enum MessageType { application, proposal, commit }
@@ -9,7 +10,7 @@ class MlsMessage {
   final String senderId;
   final int epoch;
   final HpkeCiphertext ciphertext;
-  final Uint8List signature;
+  final Signature signature;
   final MessageType messageType;
 
   const MlsMessage({
@@ -26,7 +27,7 @@ class MlsMessage {
     'sender_id': senderId,
     'epoch': epoch,
     'ciphertext': ciphertext.toJson(),
-    'signature': base64Url.encode(signature.toList()),
+    'signature': base64Url.encode(signature.bytes.toList()),
     'message_type': messageType.name,
   };
 
@@ -35,7 +36,10 @@ class MlsMessage {
     senderId: json['sender_id'] as String,
     epoch: json['epoch'] as int,
     ciphertext: HpkeCiphertext.fromJson(json['ciphertext'] as Map<String, dynamic>),
-    signature: Uint8List.fromList(base64Url.decode(json['signature'] as String)),
+    signature: Signature(
+      Uint8List.fromList(base64Url.decode(json['signature'] as String)),
+      publicKey: null,
+    ),
     messageType: MessageType.values.firstWhere(
       (t) => t.name == json['message_type'],
       orElse: () => MessageType.application,

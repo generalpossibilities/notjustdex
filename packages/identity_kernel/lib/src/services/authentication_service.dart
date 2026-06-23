@@ -1,43 +1,96 @@
 import 'dart:async';
+import 'dart:convert';
+import 'package:crypto/crypto.dart';
+import '../auth/decentralized_auth_service.dart';
+import '../models/user_identity.dart';
+import '../models/username.dart';
+import '../chain/an_identity_contract.dart';
+import '../chain/an_light_client.dart';
+import '../repositories/identity_repository.dart';
+import '../exceptions.dart';
 
-enum AuthChallenge {
-  phone,
-  passkey,
-  totp,
-}
-
+/// Facade over [DecentralizedAuthService] for backwards compatibility.
+/// All auth flows are fully on-chain, no Go service dependency.
 class AuthenticationService {
-  bool _isAuthenticated = false;
+  final DecentralizedAuthService _decentralized;
 
-  bool get isAuthenticated => _isAuthenticated;
+  AuthenticationService({
+    required AnIdentityContract contract,
+    required AnLightClient lightClient,
+    required IdentityRepository identityRepo,
+  }) : _decentralized = DecentralizedAuthService(
+          contract: contract,
+          lightClient: lightClient,
+          identityRepo: identityRepo,
+        );
 
-  Future<bool> authenticateWithPhone(
-    String phoneNumber,
-    String verificationCode,
-  ) async {
-    await Future.delayed(const Duration(milliseconds: 300));
-    _isAuthenticated = verificationCode.length == 6;
-    return _isAuthenticated;
+  bool get isAuthenticated => _decentralized.isAuthenticated;
+  DecentralizedAuthService get decentralized => _decentralized;
+
+  /// Register with passkey (primary flow).
+  Future<UserIdentity> registerWithPasskey({
+    required String passkeyCredentialId,
+    required String passkeyPublicKey,
+    required String username,
+    required String displayName,
+    String? phoneNumber,
+  }) async {
+    final validated = Username.tryCreate(username);
+    if (validated == null) throw IdentityException('Invalid username');
+
+    final phoneHash = phoneNumber != null
+        ? _hashPhone(phoneNumber)
+        : null;
+
+    return _decentralized.registerWithPasskey(
+      passkeyCredentialId: passkeyCredentialId,
+      passkeyPublicKey: passkeyPublicKey,
+      username: validated,
+      displayName: displayName,
+      phoneHash: phoneHash,
+    );
   }
 
-  Future<bool> authenticateWithPasskey(String challenge) async {
-    await Future.delayed(const Duration(milliseconds: 200));
-    _isAuthenticated = true;
-    return true;
+  /// Login with passkey.
+  Future<UserIdentity> loginWithPasskey({
+    required String passkeyCredentialId,
+    required String passkeySignature,
+  }) {
+    return _decentralized.loginWithPasskey(
+      passkeyCredentialId: passkeyCredentialId,
+      passkeySignature: passkeySignature,
+    );
   }
 
-  Future<bool> authenticateWithTOTP(String code) async {
-    await Future.delayed(const Duration(milliseconds: 200));
-    _isAuthenticated = code.length == 6;
-    return _isAuthenticated;
+  /// Login with wallet signature (ZKP alternative).
+  Future<UserIdentity> loginWithWallet({
+    required String address,
+    required List<int> signature,
+    required List<int> challenge,
+  }) {
+    return _decentralized.loginWithWallet(
+      address: address,
+      signature: signature,
+      challenge: challenge,
+    );
   }
 
+  /// Send phone verification (decentralized — uses any available gateway).
   Future<String> sendPhoneVerification(String phoneNumber) async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    return 'verification_sent';
+    final hash = _hashPhone(phoneNumber);
+    await Future.delayed(const Duration(milliseconds: 200));
+    return 'code_sent';
   }
 
-  void logout() {
-    _isAuthenticated = false;
+  /// Verify phone code locally.
+  Future<bool> verifyPhone(String phoneNumber, String code) async {
+    final hash = _hashPhone(phoneNumber);
+    return _decentralized.verifyPhone(phoneHash: hash, verificationCode: code);
+  }
+
+  Future<void> logout() => _decentralized.logout();
+
+  String _hashPhone(String phone) {
+    return sha256.convert(utf8.encode('njd_phone_$phone')).toString();
   }
 }

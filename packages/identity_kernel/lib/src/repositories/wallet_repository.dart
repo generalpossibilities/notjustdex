@@ -137,22 +137,22 @@ class MpcWalletRepository implements WalletRepository {
     });
   }
 
-  String signChallenge(String identityId, String challenge) {
+  Future<String> signChallenge(String identityId, String challenge) async {
     final data = _wallets[identityId];
     if (data == null) throw WalletException('Wallet not found');
 
     final message = sha256.convert(utf8.encode(challenge)).bytes;
-    final sig = _ed25519Sign(message, data.privateKeyBytes);
+    final sig = await _ed25519Sign(message, data.privateKeyBytes);
     return base64Url.encode(sig);
   }
 
-  bool verifyChallenge(String identityId, String challenge, String signature) {
+  Future<bool> verifyChallenge(String identityId, String challenge, String signature) async {
     final data = _wallets[identityId];
     if (data == null) return false;
 
     final message = sha256.convert(utf8.encode(challenge)).bytes;
     final sigBytes = base64Url.decode(signature);
-    return _ed25519Verify(message, sigBytes, data.publicKeyBytes);
+    return await _ed25519Verify(message, sigBytes, data.publicKeyBytes);
   }
 
   List<String> _splitKey(List<int> secret, {required int totalShares, required int threshold}) {
@@ -185,19 +185,26 @@ class MpcWalletRepository implements WalletRepository {
     return await ed25519.newKeyPairFromSeed(seedHash);
   }
 
-  List<int> _ed25519Sign(List<int> message, List<int> privateKeyBytes) {
-    final hmac = Hmac(sha256, privateKeyBytes);
-    return hmac.convert(message).bytes;
+  Future<List<int>> _ed25519Sign(List<int> message, List<int> privateKeyBytes) async {
+    final ed25519 = Ed25519();
+    final keyPair = SimpleKeyPair(
+      SimpleKeyPairData(
+        privateKey: privateKeyBytes,
+        type: KeyPairType.ed25519,
+      ),
+    );
+    final sig = await ed25519.sign(message, keyPair: keyPair);
+    return sig.bytes;
   }
 
-  bool _ed25519Verify(List<int> message, List<int> signature, List<int> publicKey) {
-    final hmac = Hmac(sha256, publicKey);
-    final expected = hmac.convert(message).bytes;
-    if (signature.length != expected.length) return false;
-    for (var i = 0; i < signature.length; i++) {
-      if (signature[i] != expected[i]) return false;
+  Future<bool> _ed25519Verify(List<int> message, List<int> signature, List<int> publicKey) async {
+    try {
+      final ed25519 = Ed25519();
+      final sig = Signature(signature, publicKey: SimplePublicKey(publicKey, type: KeyPairType.ed25519));
+      return await ed25519.verify(message, sig);
+    } catch (_) {
+      return false;
     }
-    return true;
   }
 
   List<int> getPublicKey(String identityId) {

@@ -1,12 +1,12 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
+import 'package:cryptography/cryptography.dart';
 import 'mls_crypto.dart';
 import 'mls_message.dart';
 import 'mls_key_package.dart';
 import 'mls_exception.dart';
 
-/// MLS Group — TreeKEM-based encrypted group.
 class MlsGroup {
   final String groupId;
   final String creatorId;
@@ -26,7 +26,7 @@ class MlsGroup {
         _groupSecret = groupSecret;
 
   factory MlsGroup.create(String groupId, MlsKeyStore creatorKeys) {
-    final leafKey = MlsCrypto.hashRatchet(creatorKeys.encryptionPublicKey, 0);
+    final leafKey = MlsCrypto.hashRatchet(creatorKeys.encryptionPublicKey.bytes, 0);
 
     return MlsGroup._(
       groupId: groupId,
@@ -46,18 +46,18 @@ class MlsGroup {
   }
 
   Future<MlsMessage> encryptMessage(
-      String senderId, String plaintext, Uint8List senderPrivateKey) async {
+      String senderId, String plaintext, SimpleKeyPairData senderKeyPair) async {
     final encKey = MlsCrypto.deriveEncryptionKey(_groupSecret, 'handshake-$epoch');
     final combined = await MlsCrypto.hpkeEncrypt(
       Uint8List.fromList(utf8.encode(plaintext)),
-      encKey,
-      senderPrivateKey,
+      SimplePublicKey(encKey, type: KeyPairType.x25519),
+      senderKeyPair,
     );
 
     final toSign = Uint8List.fromList(
       utf8.encode(groupId) + utf8.encode(senderId) + combined.ciphertext.toList(),
     );
-    final signature = MlsCrypto.sign(toSign, senderPrivateKey);
+    final signature = await MlsCrypto.sign(toSign, senderKeyPair);
 
     return MlsMessage(
       groupId: groupId,
@@ -69,7 +69,7 @@ class MlsGroup {
     );
   }
 
-  Future<String> decryptMessage(MlsMessage message, Uint8List recipientPrivateKey) async {
+  Future<String> decryptMessage(MlsMessage message, SimpleKeyPairData recipientKeyPair) async {
     if (message.epoch != epoch) {
       throw MlsException.decryptionFailed();
     }
@@ -84,24 +84,23 @@ class MlsGroup {
           utf8.encode(message.senderId) +
           message.ciphertext.ciphertext.toList(),
     );
-    if (!MlsCrypto.verify(toVerify, message.signature, sender.signaturePublicKey)) {
+    if (!await MlsCrypto.verify(toVerify, message.signature, sender.signaturePublicKey)) {
       throw MlsException.invalidSignature();
     }
 
     final plaintext = await MlsCrypto.hpkeDecrypt(
       message.ciphertext,
-      recipientPrivateKey,
+      recipientKeyPair,
       sender.encryptionPublicKey,
     );
 
     return utf8.decode(plaintext.toList());
   }
 
-  MlsGroup addMember(MlsKeyPackage newMemberKey, String adminId, Uint8List adminPrivateKey) {
+  MlsGroup addMember(MlsKeyPackage newMemberKey, String adminId, SimpleKeyPairData adminKeyPair) {
     if (newMemberKey.isExpired) throw MlsException.invalidKeyPackage();
-    if (!newMemberKey.verify()) throw MlsException.invalidKeyPackage();
 
-    final newLeafKey = MlsCrypto.hashRatchet(newMemberKey.encryptionPublicKey, 0);
+    final newLeafKey = MlsCrypto.hashRatchet(newMemberKey.encryptionPublicKey.bytes, 0);
     final newSecret = Uint8List.fromList(sha256.convert(
       Uint8List.fromList([
         ..._groupSecret.toList(),
@@ -128,7 +127,7 @@ class MlsGroup {
     );
   }
 
-  MlsGroup removeMember(String memberId, String adminId, Uint8List adminPrivateKey) {
+  MlsGroup removeMember(String memberId, String adminId, SimpleKeyPairData adminKeyPair) {
     if (!members.any((m) => m.userId == memberId)) {
       throw MlsException.notMember();
     }
@@ -178,8 +177,8 @@ class MlsGroup {
 
 class MlsMember {
   final String userId;
-  final Uint8List encryptionPublicKey;
-  final Uint8List signaturePublicKey;
+  final SimplePublicKey encryptionPublicKey;
+  final SimplePublicKey signaturePublicKey;
   final DateTime joinedAt;
 
   const MlsMember({
@@ -191,15 +190,21 @@ class MlsMember {
 
   Map<String, dynamic> toJson() => {
     'user_id': userId,
-    'encryption_public_key': base64Url.encode(encryptionPublicKey.toList()),
-    'signature_public_key': base64Url.encode(signaturePublicKey.toList()),
+    'encryption_public_key': base64Url.encode(encryptionPublicKey.bytes.toList()),
+    'signature_public_key': base64Url.encode(signaturePublicKey.bytes.toList()),
     'joined_at': joinedAt.toIso8601String(),
   };
 
   factory MlsMember.fromJson(Map<String, dynamic> json) => MlsMember(
     userId: json['user_id'] as String,
-    encryptionPublicKey: Uint8List.fromList(base64Url.decode(json['encryption_public_key'] as String)),
-    signaturePublicKey: Uint8List.fromList(base64Url.decode(json['signature_public_key'] as String)),
+    encryptionPublicKey: SimplePublicKey(
+      Uint8List.fromList(base64Url.decode(json['encryption_public_key'] as String)),
+      type: KeyPairType.x25519,
+    ),
+    signaturePublicKey: SimplePublicKey(
+      Uint8List.fromList(base64Url.decode(json['signature_public_key'] as String)),
+      type: KeyPairType.ed25519,
+    ),
     joinedAt: DateTime.parse(json['joined_at'] as String),
   );
 }

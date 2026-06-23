@@ -1,9 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:notjustdex_identity_kernel/notjustdex_identity_kernel.dart';
 import 'app_module.dart';
 import '../../feed/unified_feed_page.dart';
+import '../../feed/services/feed_api.dart';
 
 class FeedModule extends AppModule {
+  final FeedApiClient api;
+
+  FeedModule({FeedApiClient? api, DecentralizedFeedService? decentralizedFeed, IpfsClient? ipfs})
+      : api = api ?? FeedApiClient(
+          decentralizedFeed: decentralizedFeed,
+          ipfs: ipfs,
+        );
+
   @override
   String get name => 'feed';
 
@@ -15,11 +25,14 @@ class FeedModule extends AppModule {
 
   @override
   List<GoRoute> get routes => [
-    GoRoute(path: '/feed', builder: (_, __) => const UnifiedFeedPage()),
+    GoRoute(
+      path: '/feed',
+      builder: (_, __) => UnifiedFeedPage(api: api),
+    ),
   ];
 
   @override
-  Widget? get tabWidget => const UnifiedFeedPage();
+  Widget? get tabWidget => UnifiedFeedPage(api: api);
 
   @override
   NavigationDestination? get tabDestination => const NavigationDestination(

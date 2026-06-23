@@ -1,63 +1,32 @@
-# NotJustDex Feature Flags
-# Every module is independently connectable/disconnectable.
-# Set enabled: false to remove the module entirely from the app.
-
-# Core services (required)
-auth:
-  enabled: true
-  service_host: "auth:8081"
-  required: true
-
-users:
-  enabled: true
-  service_host: "users:8082"
-  required: true
+# Feature flags — every module independently togglable.
+# No Go service hosts needed; all features are decentralized.
 
 feed:
   enabled: true
-  service_host: "feed:8083"
-  required: false  # optional — Feed tab hidden when down
 
 chat:
   enabled: true
-  service_host: "chat:8085"
-  required: false
 
 mini_apps:
   enabled: true
-  required: false
 
 notifications:
   enabled: true
-  service_host: "notifications:8087"
-  required: false
 
 creator_economy:
   enabled: true
-  service_host: "creator_economy:8092"
-  required: false
 
 search:
   enabled: true
-  service_host: "search:8086"
-  required: false
 
 moderation:
   enabled: true
-  service_host: "moderation:8090"
-  required: false
 
 media:
   enabled: true
-  service_host: "media:8088"
-  required: false
-
-dao:
-  enabled: false  # gated — not ready
-  service_host: "dao:8091"
-  required: false
 
 analytics:
   enabled: true
-  service_host: "analytics:8089"
-  required: false
+
+dao:
+  enabled: false

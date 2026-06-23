@@ -20,5 +20,8 @@ abstract class IdentityRepository {
     Profile profile,
   );
 
+  /// Save identity to local cache.
+  Future<void> saveIdentity(UserIdentity identity);
+
   Stream<UserIdentity> watchIdentity(String identityId);
 }

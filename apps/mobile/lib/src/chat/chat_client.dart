@@ -1,120 +1,57 @@
 import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
+import 'package:notjustdex_decentralized_chat/notjustdex_decentralized_chat.dart';
+import 'package:notjustdex_mls_encryption/notjustdex_mls_encryption.dart';
 
-class ChatMessage {
-  final String id;
-  final String conversationId;
-  final String senderId;
-  final String content;
-  final String contentType;
-  final DateTime sentAt;
-  final String? replyToId;
-
-  ChatMessage({
-    required this.id,
-    required this.conversationId,
-    required this.senderId,
-    required this.content,
-    this.contentType = 'text',
-    required this.sentAt,
-    this.replyToId,
-  });
-
-  factory ChatMessage.fromJson(Map<String, dynamic> json) => ChatMessage(
-        id: json['id'] as String,
-        conversationId: json['conversation_id'] as String,
-        senderId: json['sender_id'] as String,
-        content: json['content'] as String,
-        contentType: json['content_type'] as String? ?? 'text',
-        sentAt: DateTime.parse(json['sent_at'] as String),
-        replyToId: json['reply_to_id'] as String?,
-      );
-}
-
-class ChatConversation {
-  final String id;
-  final String type;
-  final List<String> participantIds;
-  final ChatMessage? lastMessage;
-  final int unreadCount;
-  final DateTime createdAt;
-
-  ChatConversation({
-    required this.id,
-    required this.type,
-    required this.participantIds,
-    this.lastMessage,
-    this.unreadCount = 0,
-    required this.createdAt,
-  });
-
-  factory ChatConversation.fromJson(Map<String, dynamic> json) =>
-      ChatConversation(
-        id: json['id'] as String,
-        type: json['type'] as String,
-        participantIds: (json['participant_ids'] as List)
-            .map((e) => e as String)
-            .toList(),
-        lastMessage: json['last_message'] != null
-            ? ChatMessage.fromJson(json['last_message'] as Map<String, dynamic>)
-            : null,
-        unreadCount: json['unread_count'] as int? ?? 0,
-        createdAt: DateTime.parse(json['created_at'] as String),
-      );
-}
-
+/// Decentralized chat client wrapping DecentralizedChatService.
+///
+/// Preserves the same Stream<ChatMessage> interface as the old Go-based
+/// ChatClient so existing consumer code doesn't break.
 class ChatClient {
-  WebSocket? _ws;
-  final StreamController<ChatMessage> _messageController =
-      StreamController<ChatMessage>.broadcast();
-  final StreamController<Map<String, dynamic>> _eventController =
-      StreamController<Map<String, dynamic>>.broadcast();
+  final DecentralizedChatService _service;
+  final ChatRelayClient _relayClient;
+  final ConversationStore _store;
 
-  Stream<ChatMessage> get messages => _messageController.stream;
-  Stream<Map<String, dynamic>> get events => _eventController.stream;
+  ChatClient({
+    required DecentralizedChatService service,
+    required ChatRelayClient relayClient,
+    required ConversationStore store,
+  })  : _service = service,
+        _relayClient = relayClient,
+        _store = store;
 
-  Future<void> connect(String userId, String host) async {
-    _ws = await WebSocket.connect('ws://$host/ws?user_id=$userId');
-    _ws!.listen(
-      (data) {
-        final json = jsonDecode(data as String) as Map<String, dynamic>;
-        final type = json['type'] as String;
-        if (type == 'new_message') {
-          _messageController.add(
-            ChatMessage.fromJson(json['message'] as Map<String, dynamic>),
-          );
-        } else {
-          _eventController.add(json);
-        }
-      },
-      onError: (e) => print('WebSocket error: $e'),
-      onDone: () => print('WebSocket closed'),
+  Stream<ChatMessage> get messages => _service.onMessage;
+
+  /// Connect using identity address and MLS key store.
+  Future<void> connect({
+    required String userId,
+    required MlsKeyStore keyStore,
+    List<String> relayUrls = const [],
+  }) async {
+    await _service.init(
+      myAddress: userId,
+      keyStore: keyStore,
+      relayUrls: relayUrls,
     );
   }
 
-  void sendMessage(String conversationId, String content,
-      {String contentType = 'text'}) {
-    final msg = jsonEncode({
-      'type': 'send_message',
-      'conversation_id': conversationId,
-      'content': content,
-      'content_type': contentType,
-    });
-    _ws?.add(msg);
+  Future<void> sendMessage(String conversationId, String content,
+      {String contentType = 'text'}) async {
+    await _service.sendMessage(conversationId, content, contentType: contentType);
   }
 
   void sendTyping(String conversationId) {
-    final msg = jsonEncode({
-      'type': 'typing',
-      'conversation_id': conversationId,
-    });
-    _ws?.add(msg);
+    // Typing indicators via relay — could be added as a relay message type
+  }
+
+  List<ChatConversation> getConversations() {
+    return _service.getConversations();
+  }
+
+  List<ChatMessage> getMessages(String conversationId, {int limit = 50, int offset = 0}) {
+    return _service.getMessages(conversationId, limit: limit, offset: offset);
   }
 
   void disconnect() {
-    _ws?.close();
-    _messageController.close();
-    _eventController.close();
+    _relayClient.disconnect();
   }
 }

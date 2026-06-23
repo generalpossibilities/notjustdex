@@ -1,7 +1,9 @@
 import 'dart:async';
-import 'dart:convert';
-import 'dart:io';
 
+/// Local notification state — no Go backend.
+///
+/// Notifications are generated locally from chain events
+/// (follows, likes, chat messages) rather than fetched from a server.
 enum NotificationType {
   chatMessage,
   feedLike,
@@ -69,82 +71,30 @@ class AppNotification {
 }
 
 class NotificationClient {
-  WebSocket? _ws;
   final _notifController = StreamController<AppNotification>.broadcast();
 
   Stream<AppNotification> get onNotification => _notifController.stream;
 
-  final String _baseUrl;
-
-  NotificationClient({required String baseUrl}) : _baseUrl = baseUrl;
+  NotificationClient();
 
   Future<void> connect(String userId) async {
-    _ws = await WebSocket.connect('ws://$_baseUrl/ws?user_id=$userId');
-    _ws!.listen(
-      (data) {
-        final json = jsonDecode(data as String) as Map<String, dynamic>;
-        if (json['type'] == 'notification') {
-          _notifController.add(
-            AppNotification.fromJson(
-              json['notification'] as Map<String, dynamic>,
-            ),
-          );
-        }
-      },
-      onError: (e) => print('Notification WS error: $e'),
-      onDone: () => print('Notification WS closed'),
-    );
+    // Notifications come via chain event listener, not WebSocket
+  }
+
+  void addNotification(AppNotification notification) {
+    _notifController.add(notification);
   }
 
   Future<List<AppNotification>> getNotifications(
       String userId, {int limit = 20, int offset = 0}) async {
-    final client = HttpClient();
-    try {
-      final req = await client.getUrl(
-        Uri.parse('$_baseUrl/api/notifications?user_id=$userId&limit=$limit&offset=$offset'),
-      );
-      final res = await req.close();
-      final body = await res.transform(utf8.decoder).join();
-      final json = jsonDecode(body) as Map<String, dynamic>;
-      return (json['notifications'] as List)
-          .map((e) => AppNotification.fromJson(e as Map<String, dynamic>))
-          .toList();
-    } finally {
-      client.close();
-    }
+    return [];
   }
 
   Future<int> getUnreadCount(String userId) async {
-    final client = HttpClient();
-    try {
-      final req = await client.getUrl(
-        Uri.parse('$_baseUrl/api/notifications?user_id=$userId&limit=1'),
-      );
-      final res = await req.close();
-      final body = await res.transform(utf8.decoder).join();
-      final json = jsonDecode(body) as Map<String, dynamic>;
-      return json['unread_count'] as int;
-    } finally {
-      client.close();
-    }
-  }
-
-  Future<void> markRead(String userId, {List<String>? ids}) async {
-    final client = HttpClient();
-    try {
-      final req = await client.postUrl(
-        Uri.parse('$_baseUrl/api/notifications/read?user_id=$userId'),
-      );
-      req.headers.contentType = ContentType.json;
-      req.write(jsonEncode({'ids': ids ?? []}));
-      await req.close();
-    } finally {
-      client.close();
-    }
+    return 0;
   }
 
   void disconnect() {
-    _ws?.close();
     _notifController.close();
   }
 }

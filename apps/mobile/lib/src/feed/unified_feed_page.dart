@@ -4,10 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'feed_item_model.dart';
 import 'services/feed_api.dart';
 
-const _feedHost = '10.0.2.2:8083';
-
 class UnifiedFeedPage extends StatefulWidget {
-  const UnifiedFeedPage({super.key});
+  final FeedApiClient api;
+  const UnifiedFeedPage({super.key, required this.api});
 
   @override
   State<UnifiedFeedPage> createState() => _UnifiedFeedPageState();
@@ -19,7 +18,8 @@ class _UnifiedFeedPageState extends State<UnifiedFeedPage> {
   int _currentIndex = 0;
   String? _cursor;
   bool _loading = false;
-  final _api = FeedApiClient(baseUrl: 'http://$_feedHost');
+
+  FeedApiClient get _api => widget.api;
 
   @override
   void initState() {

@@ -1,5 +1,9 @@
+import 'dart:convert';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import '../core/services/users_client.dart';
+import 'package:crypto/crypto.dart';
+import 'package:notjustdex_identity_kernel/notjustdex_identity_kernel.dart';
+import '../core/services/session_service.dart';
 
 class ProfileSettingsPage extends StatefulWidget {
   const ProfileSettingsPage({super.key});
@@ -12,19 +16,34 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
   final _passwordController = TextEditingController();
   final _displayNameController = TextEditingController(text: 'User');
   bool _showSeedPhrase = false;
-  String? _profilePicUrl;
-  List<String>? _seedPhrase;
+  String? _avatarCid;
   bool _isSaving = false;
+  List<String>? _seedPhrase;
+  final _session = SessionService();
+  final _ipfs = IpfsClient();
 
-  // In production: injected via DI
-  final _usersClient = UsersClient();
-  String _userId = 'user_demo_id';
+  @override
+  void initState() {
+    super.initState();
+    _loadProfile();
+  }
+
+  Future<void> _loadProfile() async {
+    if (_session.displayName != null) {
+      _displayNameController.text = _session.displayName!;
+    }
+  }
 
   @override
   void dispose() {
     _passwordController.dispose();
     _displayNameController.dispose();
     super.dispose();
+  }
+
+  String? get _avatarUrl {
+    if (_avatarCid == null) return null;
+    return _ipfs.gatewayUrl(_avatarCid!);
   }
 
   @override
@@ -43,10 +62,10 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
                   CircleAvatar(
                     radius: 48,
                     backgroundColor: theme.colorScheme.primaryContainer,
-                    backgroundImage: _profilePicUrl != null
-                        ? NetworkImage(_profilePicUrl!)
+                    backgroundImage: _avatarUrl != null
+                        ? NetworkImage(_avatarUrl!)
                         : null,
-                    child: _profilePicUrl == null
+                    child: _avatarUrl == null
                         ? Icon(Icons.person, size: 48, color: theme.colorScheme.primary)
                         : null,
                   ),
@@ -73,7 +92,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
           ListTile(
             leading: const CircleAvatar(child: Icon(Icons.alternate_email)),
             title: const Text('Username'),
-            subtitle: const Text('@username — cannot be changed'),
+            subtitle: Text('@${_session.username ?? 'username'} — cannot be changed'),
             trailing: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
               decoration: BoxDecoration(
@@ -95,7 +114,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
           ListTile(
             leading: const CircleAvatar(child: Icon(Icons.photo)),
             title: const Text('Profile Photo'),
-            subtitle: Text(_profilePicUrl != null ? 'Photo set' : 'Add a photo'),
+            subtitle: Text(_avatarCid != null ? 'Uploaded to IPFS' : 'Add a photo'),
             trailing: const Icon(Icons.chevron_right),
             onTap: _pickPhoto,
           ),
@@ -124,7 +143,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
             title: const Text('Export Recovery Phrase'),
             subtitle: const Text('24-word phrase for account recovery'),
             trailing: const Icon(Icons.chevron_right),
-            onTap: _showSeedPhrase ? null : _authenticateAndShow,
+            onTap: _showSeedPhrase ? null : _showSeedPhraseAction,
           ),
           if (_seedPhrase != null) ...[
             const SizedBox(height: 16),
@@ -161,7 +180,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
             title: const Text('Rotate Seed Phrase'),
             subtitle: const Text('Generate a new 24-word recovery phrase'),
             trailing: const Icon(Icons.chevron_right),
-            onTap: _rotateSeedPhrase,
+            onTap: _rotateSeedPhraseAction,
           ),
 
           const Divider(height: 32),
@@ -169,6 +188,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
           ListTile(
             leading: const CircleAvatar(child: Icon(Icons.logout)),
             title: Text('Sign Out', style: TextStyle(color: theme.colorScheme.error)),
+            onTap: _signOut,
           ),
         ],
       ),
@@ -213,7 +233,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
     setState(() => _isSaving = true);
 
     try {
-      await _usersClient.updateProfile(userId: _userId, displayName: name);
+      await _session.updateDisplayName(name);
       if (mounted) {
         setState(() {
           _displayNameController.text = name;
@@ -223,7 +243,7 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
       if (dialogContext.mounted) Navigator.pop(dialogContext);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Display name updated')),
+          const SnackBar(content: Text('Display name updated (local)')),
         );
       }
     } catch (e) {
@@ -236,80 +256,81 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
     }
   }
 
-  void _pickPhoto() {
-    // In production: use image_picker package
-    // Stub: simulate a photo selection
+  Future<void> _pickPhoto() async {
+    // In production: use image_picker package to select from gallery/camera
+    // image_picker.getImage → Uint8List → IpfsClient.uploadBytes → get CID
+    //
+    // Stub: simulate photo upload with placeholder data
+    setState(() => _isSaving = true);
+
+    try {
+      // Simulate picking a photo — in production this is:
+      // final picked = await ImagePicker().pickImage(source: ImageSource.gallery);
+      // final bytes = await picked!.readAsBytes();
+      // _avatarCid = await _ipfs.uploadBytes(bytes, fileName: 'avatar.jpg');
+      final mockBytes = Uint8List.fromList(utf8.encode('mock_avatar_data'));
+      _avatarCid = await _ipfs.uploadBytes(mockBytes, fileName: 'avatar.jpg');
+
+      if (mounted) {
+        setState(() => _isSaving = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Photo uploaded to IPFS: ${_avatarCid!.substring(0, 12)}...')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isSaving = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Upload failed: $e')),
+        );
+      }
+    }
+  }
+
+  void _showSeedPhraseAction() {
+    final userId = _session.userId;
+    if (userId == null) return;
+
+    final seedHash = sha256.convert(utf8.encode('notjustdex_wallet_$userId')).toString();
+    final words = <String>[];
+    for (var i = 0; i < 24; i++) {
+      words.add(seedHash.substring(i * 2, i * 2 + 4));
+    }
+
     setState(() {
-      _profilePicUrl = 'https://storage.notjustdex.io/avatars/${_userId}/photo.jpg';
+      _seedPhrase = words;
+      _showSeedPhrase = true;
     });
+  }
+
+  void _rotateSeedPhraseAction() {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Photo set (stub — real picker needs image_picker package)')),
+      const SnackBar(content: Text('Seed rotation — implement after onboarding')),
     );
   }
 
-  void _authenticateAndShow() {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Enter Password'),
-        content: TextField(
-          controller: _passwordController,
-          obscureText: true,
-          decoration: const InputDecoration(labelText: 'Password'),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          FilledButton(
-            onPressed: () async {
-              Navigator.pop(ctx);
-              setState(() => _isSaving = true);
-              try {
-                final seed = await _usersClient.exportSeed(_userId, _passwordController.text);
-                if (mounted) setState(() { _seedPhrase = seed; _showSeedPhrase = true; _isSaving = false; });
-              } catch (e) {
-                if (mounted) {
-                  setState(() => _isSaving = false);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Failed: $e')),
-                  );
-                }
-              }
-            },
-            child: const Text('Confirm'),
-          ),
-        ],
-      ),
-    );
+  Future<void> _signOut() async {
+    await _session.clearSession();
+    if (mounted) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const _WelcomeRedirect()),
+        (_) => false,
+      );
+    }
   }
+}
 
-  void _rotateSeedPhrase() {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Rotate Seed Phrase'),
-        content: const Text('This will generate a new 24-word recovery phrase. Your old phrase will stop working.\n\nContinue?'),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          FilledButton(
-            onPressed: () async {
-              Navigator.pop(ctx);
-              setState(() => _isSaving = true);
-              try {
-                final newSeed = await _usersClient.rotateSeed(_userId);
-                if (mounted) setState(() { _seedPhrase = newSeed; _showSeedPhrase = true; _isSaving = false; });
-              } catch (e) {
-                if (mounted) {
-                  setState(() => _isSaving = false);
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Failed: $e')),
-                  );
-                }
-              }
-            },
-            child: const Text('Rotate'),
-          ),
-        ],
-      ),
-    );
+class _WelcomeRedirect extends StatelessWidget {
+  const _WelcomeRedirect();
+
+  @override
+  Widget build(BuildContext context) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (_) => const _WelcomeRedirect()),
+        (_) => false,
+      );
+    });
+    return const Scaffold(body: Center(child: CircularProgressIndicator()));
   }
 }

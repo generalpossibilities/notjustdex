@@ -1,0 +1,24 @@
+name: notjustdex_decentralized_storage
+description: Decentralized content storage — IPFS + Filecoin + Arweave + Storj, HLS video, P2P delivery
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.7.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  notjustdex_identity_kernel:
+    path: ../identity_kernel
+  cryptography: ^2.7.0
+  crypto: ^3.0.3
+  http: ^1.2.2
+  uuid: ^4.5.1
+  path: ^1.9.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  test: ^1.25.8
+  lints: ^3.0.0

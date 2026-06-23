@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:math';
 import 'package:flutter/services.dart';
 import 'passkey_exception.dart';
 
@@ -234,7 +235,8 @@ class PasskeyService {
   }
 
   String _generateChallenge() {
-    final bytes = List<int>.generate(32, (_) => DateTime.now().microsecondsSinceEpoch % 256);
+    final rand = Random.secure();
+    final bytes = List<int>.generate(32, (_) => rand.nextInt(256));
     return base64Url.encode(bytes);
   }
 }

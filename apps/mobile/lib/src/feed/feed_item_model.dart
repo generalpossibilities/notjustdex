@@ -1,10 +1,16 @@
+/// Types of feed items supported by the decentralized feed.
 enum FeedItemType { video, image, text, story, miniApp }
 
-
+/// Author info resolved from on-chain identity + IPFS profile.
 class FeedAuthor {
   final String id;
   final String username;
   final String displayName;
+
+  /// IPFS CID for avatar, or null.
+  final String? avatarCid;
+
+  /// Legacy URL fallback.
   final String? avatarUrl;
   final bool isVerified;
 
@@ -12,17 +18,36 @@ class FeedAuthor {
     required this.id,
     required this.username,
     required this.displayName,
+    this.avatarCid,
     this.avatarUrl,
     this.isVerified = false,
   });
 }
 
+/// A feed item sourced from chain events + IPFS content.
+///
+/// The [mediaCid] and [avatarCid] are IPFS content identifiers.
+/// The [mediaUrl] and [avatarUrl] are legacy Go-service URLs (fallback).
 class FeedItem {
   final String id;
+
+  /// IPFS CID of the content metadata JSON.
+  final String contentCid;
+
   final FeedItemType type;
   final FeedAuthor author;
   final String? content;
+
+  /// IPFS CID of the media file (if any).
+  final String? mediaCid;
+
+  /// Legacy URL fallback for media.
   final String? mediaUrl;
+
+  /// IPFS CID of the thumbnail.
+  final String? thumbnailCid;
+
+  /// Legacy URL fallback for thumbnail.
   final String? thumbnail;
   final int? duration;
   final int likes;
@@ -37,10 +62,13 @@ class FeedItem {
 
   const FeedItem({
     required this.id,
+    required this.contentCid,
     required this.type,
     required this.author,
     this.content,
+    this.mediaCid,
     this.mediaUrl,
+    this.thumbnailCid,
     this.thumbnail,
     this.duration,
     this.likes = 0,
@@ -61,14 +89,17 @@ class FeedItem {
     int? views,
     bool? hasLiked,
     bool? hasSaved,
-    Map<String, String>? data,
+    double? score,
   }) {
     return FeedItem(
       id: id,
+      contentCid: contentCid,
       type: type,
       author: author,
       content: content,
+      mediaCid: mediaCid,
       mediaUrl: mediaUrl,
+      thumbnailCid: thumbnailCid,
       thumbnail: thumbnail,
       duration: duration,
       likes: likes ?? this.likes,
@@ -77,7 +108,7 @@ class FeedItem {
       views: views ?? this.views,
       hasLiked: hasLiked ?? this.hasLiked,
       hasSaved: hasSaved ?? this.hasSaved,
-      score: score,
+      score: score ?? this.score,
       data: data ?? this.data,
       createdAt: createdAt,
     );

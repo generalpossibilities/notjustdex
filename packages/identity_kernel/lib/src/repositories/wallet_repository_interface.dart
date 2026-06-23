@@ -11,6 +11,8 @@ abstract class WalletRepository {
   Future<bool> completeRecovery(String identityId, String confirmationCode);
   Future<String> getBalance(String identityId);
   Stream<Wallet> watchWallet(String identityId);
-  String signChallenge(String identityId, String challenge);
-  bool verifyChallenge(String identityId, String challenge, String signature);
+  Future<String> signChallenge(String identityId, String challenge);
+  Future<bool> verifyChallenge(String identityId, String challenge, String signature);
+  List<int> getPublicKey(String identityId);
+  List<int> getPrivateKey(String identityId);
 }

@@ -1,16 +1,15 @@
-.PHONY: help bootstrap analyze test gen clean dev up down lint
+.PHONY: help bootstrap analyze test gen clean dev stop lint
 
 help:
 	@echo 'NotJustDex monorepo commands:'
 	@echo '  make bootstrap   - Install all Dart/Flutter dependencies via Melos'
 	@echo '  make analyze     - Run Dart analyzer across all packages'
 	@echo '  make test        - Run all Dart tests'
-  @echo '  make test-go     - Run all Go tests'
 	@echo '  make gen         - Regenerate all code (protos + freezed)'
 	@echo '  make clean       - Clean all build artifacts'
-	@echo '  make dev         - Start all services via docker-compose'
+	@echo '  make dev         - Start chat relay via docker-compose'
 	@echo '  make stop        - Stop all services'
-	@echo '  make lint        - Run all linters'
+	@echo '  make lint        - Run Dart analyzer'
 
 bootstrap:
 	dart pub global activate melos
@@ -21,9 +20,6 @@ analyze:
 
 test:
 	melos run test
-
-test-go:
-	go test ./services/...
 
 gen:
 	melos run gen
@@ -38,6 +34,5 @@ dev:
 stop:
 	docker compose down
 
-lint: analyze
-	golangci-lint run ./services/...
-	go vet ./lib/go/...
+lint:
+	melos run analyze

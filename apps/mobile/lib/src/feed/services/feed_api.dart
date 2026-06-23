@@ -1,100 +1,100 @@
 import 'dart:convert';
-import 'dart:io';
+import 'package:notjustdex_identity_kernel/notjustdex_identity_kernel.dart';
 import '../feed_item_model.dart';
 
+/// Feed API client — chain+IPFS only.
+///
+/// No Go service fallback. Content comes from chain events + IPFS.
 class FeedApiClient {
-  final String baseUrl;
+  final DecentralizedFeedService? decentralizedFeed;
+  final IpfsClient? ipfs;
 
-  FeedApiClient({required this.baseUrl});
+  FeedApiClient({
+    this.decentralizedFeed,
+    this.ipfs,
+  });
 
   Future<List<FeedItem>> getFeed({
     required String userId,
     int limit = 10,
     String? cursor,
   }) async {
-    final client = HttpClient();
-    try {
-      final uri = Uri.parse(
-        '$baseUrl/feed/?user_id=$userId&limit=$limit${cursor != null ? '&cursor=$cursor' : ''}',
+    if (decentralizedFeed != null) {
+      final chainItems = decentralizedFeed!.loadFeed(
+        limit: limit,
+        beforeCursor: cursor,
       );
-      final req = await client.getUrl(uri);
-      final res = await req.close();
-      final body = await res.transform(utf8.decoder).join();
-      final json = jsonDecode(body) as Map<String, dynamic>;
-      return (json['items'] as List)
-          .map((e) => _parseFeedItem(e as Map<String, dynamic>))
-          .toList();
-    } finally {
-      client.close();
+      return (await chainItems).map(_fromFeedItemData).toList();
     }
+    return [];
+  }
+
+  Future<String> postContent({
+    required String identityAddress,
+    required String text,
+    String? mediaCid,
+    String? mediaType,
+  }) async {
+    if (ipfs == null) throw Exception('IPFS client not configured');
+
+    final content = {
+      'content': text,
+      if (mediaCid != null) 'mediaCid': mediaCid,
+      if (mediaType != null) 'mediaType': mediaType,
+      'timestamp': DateTime.now().millisecondsSinceEpoch,
+    };
+
+    final cid = await ipfs!.uploadJson(content);
+    return cid;
   }
 
   Future<void> like(String userId, String itemId) async {
-    await _post('/feed/like', {'user_id': userId, 'item_id': itemId});
+    if (decentralizedFeed != null) {
+      await decentralizedFeed!.like(itemId, userId);
+    }
   }
 
   Future<void> unlike(String userId, String itemId) async {
-    await _post('/feed/unlike', {'user_id': userId, 'item_id': itemId});
+    if (decentralizedFeed != null) {
+      await decentralizedFeed!.unlike(itemId);
+    }
   }
 
   Future<void> share(String userId, String itemId) async {
-    await _post('/feed/share', {'user_id': userId, 'item_id': itemId});
+    // Local-only for now
   }
 
   Future<void> view(String itemId) async {
-    final client = HttpClient();
-    try {
-      await client.postUrl(Uri.parse('$baseUrl/feed/view?item_id=$itemId'));
-    } finally {
-      client.close();
+    if (decentralizedFeed != null) {
+      decentralizedFeed!.view(itemId);
     }
   }
 
-  Future<void> _post(String path, Map<String, dynamic> body) async {
-    final client = HttpClient();
-    try {
-      final req = await client.postUrl(Uri.parse('$baseUrl$path'));
-      req.headers.contentType = ContentType.json;
-      req.write(jsonEncode(body));
-      await req.close();
-    } finally {
-      client.close();
-    }
-  }
+  FeedItem _fromFeedItemData(FeedItemData data) {
+    FeedItemType type = FeedItemType.text;
+    if (data.mediaType == 'video') type = FeedItemType.video;
+    else if (data.mediaType == 'image') type = FeedItemType.image;
+    else if (data.mediaType == 'story') type = FeedItemType.story;
 
-  FeedItem _parseFeedItem(Map<String, dynamic> json) {
     return FeedItem(
-      id: json['id'] as String,
-      type: _parseType(json['type'] as String),
+      id: data.id,
+      contentCid: data.contentCid,
+      type: type,
       author: FeedAuthor(
-        id: json['author']?['id'] as String? ?? '',
-        username: json['author']?['username'] as String? ?? '',
-        displayName: json['author']?['display_name'] as String? ?? '',
-        avatarUrl: json['author']?['avatar_url'] as String?,
-        isVerified: json['author']?['is_verified'] as bool? ?? false,
+        id: data.authorAddress,
+        username: data.username,
+        displayName: data.displayName,
+        avatarCid: data.avatarCid,
       ),
-      content: json['content'] as String?,
-      mediaUrl: json['media_url'] as String?,
-      thumbnail: json['thumbnail'] as String?,
-      duration: json['duration'] as int?,
-      likes: json['likes'] as int? ?? 0,
-      comments: json['comments'] as int? ?? 0,
-      shares: json['shares'] as int? ?? 0,
-      views: json['views'] as int? ?? 0,
-      hasLiked: json['has_liked'] as bool? ?? false,
-      hasSaved: json['has_saved'] as bool? ?? false,
-      score: (json['score'] as num?)?.toDouble() ?? 0,
-      createdAt: DateTime.parse(json['created_at'] as String),
+      content: data.content,
+      mediaCid: data.mediaCid,
+      likes: data.likes,
+      comments: data.comments,
+      shares: data.shares,
+      views: data.views,
+      hasLiked: data.hasLiked,
+      score: data.score,
+      createdAt: data.createdAt,
     );
-  }
-
-  FeedItemType _parseType(String t) {
-    switch (t) {
-      case 'video': return FeedItemType.video;
-      case 'image': return FeedItemType.image;
-      case 'text': return FeedItemType.text;
-      case 'story': return FeedItemType.story;
-      default: return FeedItemType.text;
-    }
   }
 }

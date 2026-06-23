@@ -1,40 +1,72 @@
 import 'dart:async';
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
+import 'package:cryptography/cryptography.dart' hide Hmac;
 import '../models/wallet.dart';
 import '../repositories/wallet_repository_interface.dart';
-import '../repositories/wallet_repository.dart';
-import 'acki_nacki_client.dart';
 import '../exceptions.dart';
 
+/// Wallet service — keys derived from passkey credential ID.
+///
+/// No Go service, no centralized key server.
+/// Wallet seed = SHA256("notjustdex_wallet_" + passkey_credential_id)
+/// This makes the wallet fully recoverable from the passkey alone.
 class WalletService {
   final WalletRepository _repository;
-  final AckiNackiClient? _chainClient;
 
-  WalletService(this._repository, {AckiNackiClient? chainClient})
-      : _chainClient = chainClient;
+  WalletService(this._repository);
 
-  Future<Wallet> initializeWallet(String identityId) async {
+  /// Initialize wallet from a passkey credential ID.
+  /// The wallet keys are derived deterministically from the credential ID.
+  Future<Wallet> initializeWallet(String identityId, String passkeyCredentialId) async {
     final wallet = await _repository.generateWallet(identityId);
 
-    if (_chainClient != null) {
-      final walletData = await _repository.getWallet(identityId);
-      if (walletData != null) {
-        final identityRoot = sha256.convert(utf8.encode('notjustdex_$identityId')).bytes;
-        try {
-          await _chainClient.registerIdentity(
-            username: wallet.username,
-            publicKey: _getPublicKey(identityId),
-            privateKey: _getPrivateKey(identityId),
-            identityRoot: identityRoot,
-          );
-        } catch (e) {
-          throw WalletException('Failed to register wallet on chain: $e');
-        }
-      }
-    }
+    final seed = _deriveSeed(passkeyCredentialId);
+    final keyPair = await _ed25519FromSeed(seed);
+    final pubKey = await keyPair.extractPublicKey();
+    final privKeyBytes = await keyPair.extractPrivateKeyBytes();
+    final address = _deriveAddress(pubKey.bytes);
 
-    return wallet;
+    final updated = wallet.copyWith(
+      address: address,
+      publicKeyBytes: pubKey.bytes.toList(),
+      privateKeyBytes: privKeyBytes.toList(),
+      isInitialized: true,
+    );
+
+    return updated;
+  }
+
+  /// Recover wallet from passkey credential ID (login).
+  Future<Wallet> recoverWallet(String passkeyCredentialId) async {
+    final seed = _deriveSeed(passkeyCredentialId);
+    final keyPair = await _ed25519FromSeed(seed);
+    final pubKey = await keyPair.extractPublicKey();
+    final privKeyBytes = await keyPair.extractPrivateKeyBytes();
+    final address = _deriveAddress(pubKey.bytes);
+
+    return Wallet(
+      address: address,
+      username: '',
+      publicKeyBytes: pubKey.bytes.toList(),
+      privateKeyBytes: privKeyBytes.toList(),
+      isInitialized: true,
+      seedVersion: 1,
+    );
+  }
+
+  /// Sign a challenge with the wallet key.
+  Future<List<int>> signChallenge(String identityId, List<int> challenge) async {
+    final privKey = await _repository.getPrivateKey(identityId);
+    final ed25519 = Ed25519();
+    final keyPair = SimpleKeyPair(
+      SimpleKeyPairData(
+        privateKey: privKey,
+        type: KeyPairType.ed25519,
+      ),
+    );
+    final sig = await ed25519.sign(challenge, keyPair: keyPair);
+    return sig.bytes.toList();
   }
 
   Future<Wallet> getWallet(String identityId) async {
@@ -45,97 +77,29 @@ class WalletService {
     return wallet;
   }
 
-  Future<Map<String, int>> getBalances(String identityId) async {
-    if (_chainClient != null) {
-      final wallet = await getWallet(identityId);
-      return _chainClient.getBalances(wallet.address);
-    }
-    final balanceJson = await _repository.getBalance(identityId);
-    final decoded = jsonDecode(balanceJson) as Map<String, dynamic>;
-    return decoded.map((k, v) => MapEntry(k, double.parse(v as String).toInt()));
-  }
-
   Future<String> exportMnemonic(String identityId, String password) async {
     final isValid = await _repository.verifyPassword(identityId, password);
-    if (!isValid) {
-      throw WalletException('Invalid password');
-    }
+    if (!isValid) throw WalletException('Invalid password');
     return _repository.exportMnemonic(identityId);
   }
 
   Future<void> changeSeedPhrase(String identityId, String password) async {
     final isValid = await _repository.verifyPassword(identityId, password);
-    if (!isValid) {
-      throw WalletException('Invalid password');
-    }
+    if (!isValid) throw WalletException('Invalid password');
     await _repository.rotateSeedPhrase(identityId);
-
-    if (_chainClient != null) {
-      try {
-        final newIdentityRoot = sha256.convert(utf8.encode('rotated_$identityId')).bytes;
-        await _chainClient.rotateSeedPhrase(
-          privateKey: _getPrivateKey(identityId),
-          newIdentityRoot: newIdentityRoot,
-        );
-      } catch (e) {
-        // Best-effort rotation
-      }
-    }
   }
 
-  Future<String> signTransaction(String identityId, Map<String, dynamic> tx) async {
-    final wallet = await _repository.getWallet(identityId);
-    if (wallet == null) throw WalletException('Wallet not found');
-
-    final txBytes = utf8.encode(jsonEncode(tx));
-    return _repository.signChallenge(identityId, sha256.convert(txBytes).toString());
+  List<int> _deriveSeed(String passkeyCredentialId) {
+    return sha256.convert(utf8.encode('notjustdex_wallet_$passkeyCredentialId')).bytes;
   }
 
-  Future<void> postContent(String identityId, String contentHash) async {
-    if (_chainClient == null) {
-      throw WalletException('Chain client not available');
-    }
-    await _chainClient.postContentHash(
-      privateKey: _getPrivateKey(identityId),
-      contentHash: contentHash,
-    );
+  Future<SimpleKeyPair> _ed25519FromSeed(List<int> seed) async {
+    final ed25519 = Ed25519();
+    return await ed25519.newKeyPairFromSeed(seed);
   }
 
-  Future<void> followUser(String identityId, String followeeAddress) async {
-    if (_chainClient == null) {
-      throw WalletException('Chain client not available');
-    }
-    await _chainClient.followUser(
-      privateKey: _getPrivateKey(identityId),
-      followeeAddress: followeeAddress,
-    );
-  }
-
-  List<int> _getPublicKey(String identityId) {
-    final repo = _repository;
-    if (repo is MpcWalletRepository) {
-      return repo.getPublicKey(identityId);
-    }
-    throw WalletException('Cannot access key material');
-  }
-
-  List<int> _getPrivateKey(String identityId) {
-    final repo = _repository;
-    if (repo is MpcWalletRepository) {
-      return repo.getPrivateKey(identityId);
-    }
-    throw WalletException('Cannot access key material');
-  }
-
-  Future<void> initiateRecovery(String identityId) async {
-    await _repository.initiateRecovery(identityId);
-  }
-
-  Future<bool> completeRecovery(String identityId, String confirmationCode) async {
-    return _repository.completeRecovery(identityId, confirmationCode);
-  }
-
-  Stream<Wallet> watchWallet(String identityId) {
-    return _repository.watchWallet(identityId);
+  String _deriveAddress(List<int> publicKey) {
+    final hash = sha256.convert(publicKey).toString();
+    return '0x${hash.substring(0, 40)}';
   }
 }

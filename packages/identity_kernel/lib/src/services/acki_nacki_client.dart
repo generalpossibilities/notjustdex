@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:crypto/crypto.dart';
+import 'package:cryptography/cryptography.dart';
 
 /// Acki Nacki blockchain client via GraphQL API.
 ///
@@ -89,23 +91,19 @@ class AckiNackiClient {
     required Map<String, dynamic> args,
     required List<int> privateKey,
   }) async {
-    final pubKey = _derivePublicKey(privateKey);
+    final pubKey = await _derivePublicKey(privateKey);
 
-    // Build ABI-encoded message body
     final payload = jsonEncode({
       'function': functionName,
       'args': args,
     });
 
-    // Sign with Ed25519
     final payloadBytes = utf8.encode(payload);
     final txHash = sha256.convert(payloadBytes).bytes;
-    final signature = _ed25519Sign(txHash, privateKey);
+    final signature = await _ed25519Sign(txHash, privateKey);
 
-    // Build BOC envelope (simplified for dev)
     final messageBoc = _buildBocEnvelope(payload, signature, pubKey);
 
-    // Send via GraphQL mutation
     return _sendMessage(messageBoc);
   }
 
@@ -132,7 +130,7 @@ class AckiNackiClient {
     required List<int> privateKey,
     required List<int> newIdentityRoot,
   }) async {
-    final pubKey = _derivePublicKey(privateKey);
+    final pubKey = await _derivePublicKey(privateKey);
     await submitTransaction(
       functionName: 'rotateSeed',
       args: {
@@ -149,7 +147,7 @@ class AckiNackiClient {
     required List<int> privateKey,
     required String followeeAddress,
   }) async {
-    final pubKey = _derivePublicKey(privateKey);
+    final pubKey = await _derivePublicKey(privateKey);
     final address = deriveAddressFromPublicKey(pubKey);
     await submitTransaction(
       functionName: 'follow',
@@ -167,7 +165,7 @@ class AckiNackiClient {
     required List<int> privateKey,
     required String contentHash,
   }) async {
-    final pubKey = _derivePublicKey(privateKey);
+    final pubKey = await _derivePublicKey(privateKey);
     await submitTransaction(
       functionName: 'postContent',
       args: {
@@ -231,13 +229,28 @@ class AckiNackiClient {
     return base64.encode(utf8.encode(jsonEncode(envelope)));
   }
 
-  static List<int> _ed25519Sign(List<int> message, List<int> privateKey) {
-    final hmac = Hmac(sha256, privateKey);
-    return hmac.convert(message).bytes;
+  static Future<List<int>> _ed25519Sign(List<int> message, List<int> privateKey) async {
+    final ed25519 = Ed25519();
+    final keyPair = SimpleKeyPair(
+      SimpleKeyPairData(
+        privateKey: privateKey,
+        type: KeyPairType.ed25519,
+      ),
+    );
+    final signature = await ed25519.sign(message, keyPair: keyPair);
+    return signature.bytes.toList();
   }
 
-  static List<int> _derivePublicKey(List<int> privateKey) {
-    return sha256.convert(privateKey).bytes;
+  static List<int> _derivePublicKey(List<int> privateKey) async {
+    final ed25519 = Ed25519();
+    final keyPair = SimpleKeyPair(
+      SimpleKeyPairData(
+        privateKey: privateKey,
+        type: KeyPairType.ed25519,
+      ),
+    );
+    final pubKey = await keyPair.extractPublicKey();
+    return pubKey.bytes;
   }
 }
 

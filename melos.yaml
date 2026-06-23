@@ -3,15 +3,12 @@ name: notjustdex
 packages:
   - apps/**
   - packages/**
+  - services/chat_relay/**
 
 command:
   bootstrap:
     runPubGetInParallel: true
     usePubspecOverrides: true
-
-  clean:
-    hooks:
-      pre: melos run clean:go
 
 scripts:
   analyze:
@@ -26,10 +23,6 @@ scripts:
     run: melos exec -- flutter test
     description: Run dart tests across all packages
 
-  test:go:
-    run: melos run test:go:all
-    description: Run all Go tests
-
   gen:
     run: melos run gen:proto && melos run gen:code
     description: Regenerate all code
@@ -42,6 +35,4 @@ scripts:
     run: melos exec -c 1 --scope notjustdex_identity_kernel -- dart run build_runner build --delete-conflicting-outputs
     description: Run dart code generation (freezed, json_serializable)
 
-  clean:go:
-    run: melos exec -c 1 -- go clean -modcache
-    description: Clean Go module cache
+

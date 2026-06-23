@@ -3,10 +3,12 @@ import 'app_module.dart';
 import '../../notifications/notification_client.dart';
 import '../../notifications/notification_page.dart';
 
-const _notifHost = '10.0.2.2:8087';
-
 class NotificationsModule extends AppModule {
-  final client = NotificationClient(baseUrl: _notifHost);
+  final NotificationClient client;
+
+  NotificationsModule()
+      : client = NotificationClient();
+
   int badgeCount = 0;
 
   @override
@@ -40,13 +42,11 @@ class NotificationsModule extends AppModule {
 
   @override
   Future<void> onConnect() async {
-    await client.connect('current_user');
     badgeCount = await client.getUnreadCount('current_user');
   }
 
   @override
   void onDisconnect() {
-    client.disconnect();
     badgeCount = 0;
   }
 }

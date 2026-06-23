@@ -4,16 +4,33 @@ import 'identity_event.dart';
 import 'identity_state.dart';
 import '../services/identity_service.dart';
 import '../services/wallet_service.dart';
+import '../services/authentication_service.dart';
+import '../exceptions.dart';
 
+/// Identity bloc — fully decentralized, no Go service dependency.
+///
+/// Events flow:
+///   registerWithPasskey → on-chain registration
+///   loginWithPasskey    → passkey assertion → wallet recovery → chain verify
+///   loginWithWallet     → wallet ZKP → chain verify
+///   loadIdentity        → fetch from chain (fallback to local cache)
 class IdentityBloc extends Bloc<IdentityEvent, IdentityState> {
   final IdentityService _identityService;
-  final WalletService? _walletService;
+  final WalletService _walletService;
+  final AuthenticationService _authService;
   StreamSubscription? _identitySubscription;
 
-  IdentityBloc(this._identityService, {WalletService? walletService})
-      : _walletService = walletService,
+  IdentityBloc({
+    required IdentityService identityService,
+    required WalletService walletService,
+    required AuthenticationService authService,
+  })  : _identityService = identityService,
+        _walletService = walletService,
+        _authService = authService,
         super(const IdentityInitial()) {
-    on<CreateIdentity>(_onCreateIdentity);
+    on<RegisterWithPasskey>(_onRegisterWithPasskey);
+    on<LoginWithPasskey>(_onLoginWithPasskey);
+    on<LoginWithWallet>(_onLoginWithWallet);
     on<LoadIdentity>(_onLoadIdentity);
     on<UpdateProfile>(_onUpdateProfile);
     on<ResolveUsername>(_onResolveUsername);
@@ -22,26 +39,55 @@ class IdentityBloc extends Bloc<IdentityEvent, IdentityState> {
     on<Logout>(_onLogout);
   }
 
-  Future<void> _onCreateIdentity(
-    CreateIdentity event,
+  Future<void> _onRegisterWithPasskey(
+    RegisterWithPasskey event,
     Emitter<IdentityState> emit,
   ) async {
     emit(const IdentityLoading());
     try {
-      final identity = await _identityService.createIdentity(
-        phoneNumber: event.phoneNumber,
+      final identity = await _authService.registerWithPasskey(
+        passkeyCredentialId: event.passkeyCredentialId,
+        passkeyPublicKey: event.passkeyPublicKey,
         username: event.username,
         displayName: event.displayName,
+        phoneNumber: event.phoneNumber,
       );
-
-      if (_walletService != null) {
-        final wallet = await _walletService.initializeWallet(identity.id);
-        emit(IdentityAuthenticated(identity.copyWith(wallet: wallet)));
-      } else {
-        emit(IdentityAuthenticated(identity));
-      }
+      emit(IdentityAuthenticated(identity));
     } catch (e) {
       emit(IdentityError(e.toString()));
+    }
+  }
+
+  Future<void> _onLoginWithPasskey(
+    LoginWithPasskey event,
+    Emitter<IdentityState> emit,
+  ) async {
+    emit(const IdentityLoading());
+    try {
+      final identity = await _authService.loginWithPasskey(
+        passkeyCredentialId: event.passkeyCredentialId,
+        passkeySignature: event.passkeySignature,
+      );
+      emit(IdentityAuthenticated(identity));
+    } catch (e) {
+      emit(const IdentityUnauthenticated());
+    }
+  }
+
+  Future<void> _onLoginWithWallet(
+    LoginWithWallet event,
+    Emitter<IdentityState> emit,
+  ) async {
+    emit(const IdentityLoading());
+    try {
+      final identity = await _authService.loginWithWallet(
+        address: event.address,
+        signature: event.signature,
+        challenge: event.challenge,
+      );
+      emit(IdentityAuthenticated(identity));
+    } catch (e) {
+      emit(const IdentityUnauthenticated());
     }
   }
 
@@ -52,13 +98,7 @@ class IdentityBloc extends Bloc<IdentityEvent, IdentityState> {
     emit(const IdentityLoading());
     try {
       final identity = await _identityService.getIdentity(event.identityId);
-
-      if (_walletService != null) {
-        final wallet = await _walletService.getWallet(identity.id);
-        emit(IdentityAuthenticated(identity.copyWith(wallet: wallet)));
-      } else {
-        emit(IdentityAuthenticated(identity));
-      }
+      emit(IdentityAuthenticated(identity));
     } catch (e) {
       emit(const IdentityUnauthenticated());
     }
@@ -77,7 +117,7 @@ class IdentityBloc extends Bloc<IdentityEvent, IdentityState> {
           current.identity.profile.copyWith(
             displayName: event.displayName,
             bio: event.bio,
-            avatarUrl: event.avatarUrl ?? current.identity.profile.avatarUrl,
+            avatarCid: event.avatarCid,
           ),
         );
         emit(IdentityAuthenticated(updated));
@@ -128,6 +168,7 @@ class IdentityBloc extends Bloc<IdentityEvent, IdentityState> {
     Emitter<IdentityState> emit,
   ) async {
     await _identitySubscription?.cancel();
+    await _authService.logout();
     emit(const IdentityUnauthenticated());
   }
 

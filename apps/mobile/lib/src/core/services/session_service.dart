@@ -1,32 +1,35 @@
 import 'package:flutter/foundation.dart';
+import 'package:hive/hive.dart';
 
-/// Manages JWT session persistence and offline caching.
-/// JWT expires in 7 days; cached locally for 24h offline use.
+const _boxName = 'session';
+
 class SessionService {
-  // In production: store in flutter_secure_storage + Hive/Isar
-  String? _token;
-  String? _userId;
-  String? _username;
-  String? _displayName;
-  String? _phoneNumber;
+  late Box _box;
+  bool _initialized = false;
 
-  bool get isLoggedIn => _token != null;
-  String? get token => _token;
-  String? get userId => _userId;
-  String? get username => _username;
-  String? get displayName => _displayName;
-  String? get phoneNumber => _phoneNumber;
+  bool get isLoggedIn => _get('token') != null;
+  String? get token => _get('token');
+  String? get userId => _get('userId');
+  String? get username => _get('username');
+  String? get displayName => _get('displayName');
+  String? get phoneNumber => _get('phoneNumber');
 
-  /// Check for existing session on app start.
-  /// Returns true if valid session found.
-  Future<bool> tryRestore() async {
-    // Stub: simulate checking secure storage for cached JWT
-    // In production: decrypt from secure storage, validate expiry, return true if valid
-    await Future.delayed(const Duration(milliseconds: 100));
-    return _token != null;
+  String? _get(String key) {
+    if (!_initialized) return null;
+    return _box.get(key) as String?;
   }
 
-  /// Save session after successful auth.
+  Future<bool> tryRestore() async {
+    try {
+      _box = await Hive.openBox(_boxName);
+      _initialized = true;
+      return _box.get('token') != null;
+    } catch (e) {
+      debugPrint('[Session] Failed to open Hive box: $e');
+      return false;
+    }
+  }
+
   Future<void> saveSession({
     required String token,
     required String userId,
@@ -34,30 +37,25 @@ class SessionService {
     String? displayName,
     String? phoneNumber,
   }) async {
-    _token = token;
-    _userId = userId;
-    _username = username;
-    _displayName = displayName;
-    _phoneNumber = phoneNumber;
-
-    // In production: encrypt and persist to flutter_secure_storage
+    if (!_initialized) return;
+    await _box.putAll({
+      'token': token,
+      'userId': userId,
+      'username': username,
+      if (displayName != null) 'displayName': displayName,
+      if (phoneNumber != null) 'phoneNumber': phoneNumber,
+    });
     debugPrint('[Session] Saved session for $username');
   }
 
-  /// Clear session (sign out).
   Future<void> clearSession() async {
-    _token = null;
-    _userId = null;
-    _username = null;
-    _displayName = null;
-    _phoneNumber = null;
-
-    // In production: clear secure storage
+    if (!_initialized) return;
+    await _box.clear();
     debugPrint('[Session] Cleared session');
   }
 
-  /// Update display name in cached session.
-  void updateDisplayName(String name) {
-    _displayName = name;
+  Future<void> updateDisplayName(String name) async {
+    if (!_initialized) return;
+    await _box.put('displayName', name);
   }
 }
