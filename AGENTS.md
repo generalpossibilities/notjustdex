@@ -71,6 +71,7 @@ The kernel is a Dart package (`notjustdex_identity_kernel`) with:
 | `packages/mls_encryption/` | MLS (Messaging Layer Security) E2E encryption — TreeKEM, HPKE, X25519, Ed25519, AES-256-GCM |
 | `packages/decentralized_chat/` | P2P chat over relays + MLS encryption — multi-relay client, Hive persistence, DecentralizedChatService |
 | `packages/decentralized_storage/` | Decentralized content storage — IPFS + Filecoin + Arweave + Storj, HLS video processing, multi-backend replication with redundancy guarantees |
+| `packages/identity_kernel/lib/src/vault/` | VaultService — decentralized password/secret manager inside IK: 8 entry types, XChaCha20-Poly1305, Argon2id, TOTP codes, biometric gate, audit log, backup/restore, password generator |
 | `services/chat_relay/` | Dart chat relay server (shelf_web_socket) — anyone can run one, topic-based pub/sub |
 | `infrastructure/` | Docker, K8s, Terraform stubs |
 
@@ -130,7 +131,7 @@ removed (feature flag, backend down, or excluded at build time) without breaking
 
 ```
 Required ─── identity_kernel (chain + IPFS)
-Optional ─── chat, feed, notifications, mini_app_runtime
+Optional ─── chat, feed, notifications, mini_app_runtime, vault
 Enhanced ─── creator_economy, search, analytics, dao
 ```
 
@@ -171,6 +172,7 @@ on which modules are available:
 | Feed | FeedModule | Optional | Tab hidden; toast "Feed unavailable" |
 | Chat | ChatModule | Optional | Tab hidden; messages queued locally |
 | Discover | DiscoverModule | Optional | Tab shows installed apps; store disabled |
+| Vault | VaultModule | Optional | Tab shows cached entries; "syncing" indicator; cannot save until online |
 | Activity | NotificationsModule | Optional | Tab shows "offline" + reconnect button |
 | Profile | ProfileModule | Required | Cached profile; "Could not update" toast |
 
@@ -278,6 +280,7 @@ After editing any `@freezed` class or `.proto` file, run `make gen`. Generated f
 - `/packages/identity_kernel/lib/src/ipfs/ipfs_client.dart`: IPFS upload/download with multi-gateway fallback.
 - `/packages/identity_kernel/lib/src/ipfs/profile_service.dart`: Profile stored as IPFS JSON, CID committed on chain.
 - `/services/chat_relay/`: Dart WebSocket pub/sub relay — anyone can run, topic-based.
+- `/packages/identity_kernel/lib/src/vault/`: VaultService — decentralized vault: 8 entry types, XChaCha20-Poly1305 AEAD, always Argon2id key derivation, Hive local cache, AckiNackiClient chain storage, audit service, backup/restore, password generator, TOTP code display, biometric gate, auto-lock, clipboard auto-clear.
 
 ## What not to do
 
