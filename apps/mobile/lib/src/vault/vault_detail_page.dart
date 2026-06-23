@@ -29,7 +29,11 @@ class _VaultDetailPageState extends State<VaultDetailPage> {
   void initState() {
     super.initState();
     _entry = widget.entry;
-    widget.vaultService.recordAccess(_entry.id);
+    try {
+      widget.vaultService.recordAccess(_entry.id);
+    } catch (_) {
+      // Record access is non-critical — vault still works offline
+    }
     if (_entry.type == VaultEntryType.totp) {
       _startTotpTimer();
     }
@@ -448,10 +452,18 @@ class _VaultDetailPageState extends State<VaultDetailPage> {
   }
 
   Future<void> _toggleFavorite() async {
-    await widget.vaultService.toggleFavorite(_entry.id);
-    setState(() {
-      _entry = _entry.copyWith(isFavorite: !_entry.isFavorite);
-    });
+    try {
+      await widget.vaultService.toggleFavorite(_entry.id);
+      setState(() {
+        _entry = _entry.copyWith(isFavorite: !_entry.isFavorite);
+      });
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not toggle favorite: $e')),
+        );
+      }
+    }
   }
 
   Future<void> _editEntry() async {
@@ -492,8 +504,16 @@ class _VaultDetailPageState extends State<VaultDetailPage> {
     );
 
     if (confirmed == true) {
-      await widget.vaultService.deleteEntry(_entry.id);
-      if (mounted) Navigator.of(context).pop(true);
+      try {
+        await widget.vaultService.deleteEntry(_entry.id);
+        if (mounted) Navigator.of(context).pop(true);
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Could not delete: $e')),
+          );
+        }
+      }
     }
   }
 

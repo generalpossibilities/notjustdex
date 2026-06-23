@@ -22,8 +22,9 @@ class IdentityService {
         _cache = cache;
 
   /// Check if a username is available on chain.
-  Future<bool> checkUsernameAvailability(String username) {
-    return _contract.isUsernameAvailable(username.toLowerCase());
+  Future<bool> checkUsernameAvailability(String username) async {
+    final available = await _contract.isUsernameAvailable(username.toLowerCase());
+    return available ?? false; // null = chain-down, treat as unavailable
   }
 
   /// Resolve username to identity (from chain).
@@ -38,10 +39,14 @@ class IdentityService {
 
   /// Get identity by wallet address (from chain, fallback to cache).
   Future<UserIdentity> getIdentity(String address) async {
-    final chain = await _contract.getIdentity(address);
-    if (chain != null) {
-      await _cache.saveIdentity(chain);
-      return chain;
+    try {
+      final chain = await _contract.getIdentity(address);
+      if (chain != null) {
+        await _cache.saveIdentity(chain);
+        return chain;
+      }
+    } catch (_) {
+      // Chain-down — try cache
     }
     final cached = await _cache.getIdentity(address);
     if (cached != null) return cached;
@@ -71,8 +76,12 @@ class IdentityService {
   /// Watch identity for changes (from chain events).
   Stream<UserIdentity> watchIdentity(String address) {
     return _contract.onIdentityRegistered().asyncExpand((event) async* {
-      final identity = await _contract.getIdentity(address);
-      if (identity != null) yield identity;
+      try {
+        final identity = await _contract.getIdentity(address);
+        if (identity != null) yield identity;
+      } catch (_) {
+        // Chain event error — continue listening
+      }
     });
   }
 }

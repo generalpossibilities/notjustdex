@@ -36,8 +36,8 @@ class AnIdentityContract {
 
   String get contractAddress => _contractAddress;
 
-  /// Register a new identity on chain.
-  Future<void> registerIdentity({
+  /// Register a new identity on chain. Returns false on chain-down.
+  Future<bool> registerIdentity({
     required String username,
     required String address,
     required List<int> publicKey,
@@ -45,131 +45,167 @@ class AnIdentityContract {
     required String passkeyPublicKey,
     String? phoneHash,
   }) async {
-    await _client.submitTransaction(
-      contractAddress: _contractAddress,
-      method: 'register',
-      args: {
-        'username': username,
-        'address': address,
-        'publicKey': base64Url.encode(publicKey),
-        'identityRoot': base64Url.encode(identityRoot),
-        'passkeyPublicKey': passkeyPublicKey,
-        if (phoneHash != null) 'phoneHash': phoneHash,
-      },
-      signature: publicKey,
-      publicKey: publicKey,
-    );
+    return _safeTransaction(() async {
+      await _client.submitTransaction(
+        contractAddress: _contractAddress,
+        method: 'register',
+        args: {
+          'username': username,
+          'address': address,
+          'publicKey': base64Url.encode(publicKey),
+          'identityRoot': base64Url.encode(identityRoot),
+          'passkeyPublicKey': passkeyPublicKey,
+          if (phoneHash != null) 'phoneHash': phoneHash,
+        },
+        signature: publicKey,
+        publicKey: publicKey,
+      );
+    });
   }
 
-  /// Check if a username is available on chain.
-  Future<bool> isUsernameAvailable(String username) async {
-    final result = await _client.query(
-      contractAddress: _contractAddress,
-      method: 'isUsernameAvailable',
-      args: {'username': username.toLowerCase()},
-    );
-    return result['available'] as bool? ?? false;
+  /// Check if a username is available on chain. Null = chain-down.
+  Future<bool?> isUsernameAvailable(String username) async {
+    return _safeQuery(() async {
+      final result = await _client.query(
+        contractAddress: _contractAddress,
+        method: 'isUsernameAvailable',
+        args: {'username': username.toLowerCase()},
+      );
+      return result['available'] as bool? ?? false;
+    });
   }
 
-  /// Resolve identity by wallet address.
+  /// Resolve identity by wallet address. Null = chain-down or not found.
   Future<UserIdentity?> getIdentity(String address) async {
-    final result = await _client.query(
-      contractAddress: _contractAddress,
-      method: 'getIdentity',
-      args: {'address': address},
-    );
-    if (result == null) return null;
-    return _identityFromChainData(result);
+    return _safeQuery(() async {
+      final result = await _client.query(
+        contractAddress: _contractAddress,
+        method: 'getIdentity',
+        args: {'address': address},
+      );
+      if (result == null) return null;
+      return _identityFromChainData(result);
+    });
   }
 
-  /// Resolve identity by username.
+  /// Resolve identity by username. Null = chain-down or not found.
   Future<UserIdentity?> resolveUsername(String username) async {
-    final result = await _client.query(
-      contractAddress: _contractAddress,
-      method: 'resolveUsername',
-      args: {'username': username.toLowerCase()},
-    );
-    if (result == null) return null;
-    return _identityFromChainData(result);
+    return _safeQuery(() async {
+      final result = await _client.query(
+        contractAddress: _contractAddress,
+        method: 'resolveUsername',
+        args: {'username': username.toLowerCase()},
+      );
+      if (result == null) return null;
+      return _identityFromChainData(result);
+    });
   }
 
   /// Verify an Ed25519 signature against the stored public key.
+  /// False = invalid signature OR chain-down.
   Future<bool> verifySignature({
     required String address,
     required List<int> message,
     required List<int> signature,
   }) async {
-    final result = await _client.query(
-      contractAddress: _contractAddress,
-      method: 'getPublicKey',
-      args: {'address': address},
-    );
-    if (result == null) return false;
-    final map = result as Map<String, dynamic>;
-    final raw = map['publicKey'];
-    if (raw == null) return false;
-
-    final pubKeyBytes = (raw as List<dynamic>).cast<int>();
-    if (pubKeyBytes.length != 32) return false;
-
-    final ed25519 = Ed25519();
-    try {
-      final sig = Signature(
-        signature,
-        publicKey: SimplePublicKey(pubKeyBytes, type: KeyPairType.ed25519),
+    return _safeQuery(() async {
+      final result = await _client.query(
+        contractAddress: _contractAddress,
+        method: 'getPublicKey',
+        args: {'address': address},
       );
-      return await ed25519.verify(message, sig);
-    } catch (_) {
-      return false;
-    }
+      if (result == null) return false;
+      final map = result as Map<String, dynamic>;
+      final raw = map['publicKey'];
+      if (raw == null) return false;
+
+      final pubKeyBytes = (raw as List<dynamic>).cast<int>();
+      if (pubKeyBytes.length != 32) return false;
+
+      final ed25519 = Ed25519();
+      try {
+        final sig = Signature(
+          signature,
+          publicKey: SimplePublicKey(pubKeyBytes, type: KeyPairType.ed25519),
+        );
+        return await ed25519.verify(message, sig);
+      } catch (_) {
+        return false;
+      }
+    });
   }
 
-  /// Follow another identity (on-chain tx).
-  Future<void> follow(String identityAddress, String targetAddress) async {
-    final random = Random.secure();
-    await _client.submitTransaction(
-      contractAddress: _contractAddress,
-      method: 'follow',
-      args: {
-        'follower': identityAddress,
-        'followee': targetAddress,
-      },
-      signature: List.generate(64, (_) => random.nextInt(256)),
-      publicKey: List.generate(32, (_) => random.nextInt(256)),
-    );
+  /// Follow another identity (on-chain tx). False = chain-down.
+  Future<bool> follow(String identityAddress, String targetAddress) async {
+    return _safeTransaction(() async {
+      final random = Random.secure();
+      await _client.submitTransaction(
+        contractAddress: _contractAddress,
+        method: 'follow',
+        args: {
+          'follower': identityAddress,
+          'followee': targetAddress,
+        },
+        signature: List.generate(64, (_) => random.nextInt(256)),
+        publicKey: List.generate(32, (_) => random.nextInt(256)),
+      );
+    });
   }
 
-  /// Post a content hash (on-chain tx).
-  Future<void> postContent(String identityAddress, String contentHash) async {
-    final random = Random.secure();
-    await _client.submitTransaction(
-      contractAddress: _contractAddress,
-      method: 'postContent',
-      args: {
-        'address': identityAddress,
-        'contentHash': contentHash,
-      },
-      signature: List.generate(64, (_) => random.nextInt(256)),
-      publicKey: List.generate(32, (_) => random.nextInt(256)),
-    );
+  /// Post a content hash (on-chain tx). False = chain-down.
+  Future<bool> postContent(String identityAddress, String contentHash) async {
+    return _safeTransaction(() async {
+      final random = Random.secure();
+      await _client.submitTransaction(
+        contractAddress: _contractAddress,
+        method: 'postContent',
+        args: {
+          'address': identityAddress,
+          'contentHash': contentHash,
+        },
+        signature: List.generate(64, (_) => random.nextInt(256)),
+        publicKey: List.generate(32, (_) => random.nextInt(256)),
+      );
+    });
   }
 
-  /// Update identity root (after profile changes, seed rotation, etc.).
-  Future<void> updateIdentityRoot(
+  /// Update identity root. False = chain-down.
+  Future<bool> updateIdentityRoot(
     String identityAddress,
     List<int> newIdentityRoot,
   ) async {
-    final random = Random.secure();
-    await _client.submitTransaction(
-      contractAddress: _contractAddress,
-      method: 'updateIdentityRoot',
-      args: {
-        'address': identityAddress,
-        'identityRoot': base64Url.encode(newIdentityRoot),
-      },
-      signature: List.generate(64, (_) => random.nextInt(256)),
-      publicKey: List.generate(32, (_) => random.nextInt(256)),
-    );
+    return _safeTransaction(() async {
+      final random = Random.secure();
+      await _client.submitTransaction(
+        contractAddress: _contractAddress,
+        method: 'updateIdentityRoot',
+        args: {
+          'address': identityAddress,
+          'identityRoot': base64Url.encode(newIdentityRoot),
+        },
+        signature: List.generate(64, (_) => random.nextInt(256)),
+        publicKey: List.generate(32, (_) => random.nextInt(256)),
+      );
+    });
+  }
+
+  /// Wrap a query in try/catch — returns null on any error (chain-down).
+  Future<T?> _safeQuery<T>(Future<T?> Function() fn) async {
+    try {
+      return await fn();
+    } catch (_) {
+      return null;
+    }
+  }
+
+  /// Wrap a transaction in try/catch — returns false on any error.
+  Future<bool> _safeTransaction(Future<void> Function() fn) async {
+    try {
+      await fn();
+      return true;
+    } catch (_) {
+      return false;
+    }
   }
 
   /// Subscribe to new identity registrations.

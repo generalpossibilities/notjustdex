@@ -46,6 +46,7 @@ class DecentralizedAuthService {
 
   /// Passkey registration: create WebAuthn credential, derive wallet, register on chain.
   /// [phoneHash] is optional — used only for sybil-resistance commitment.
+  /// Throws [ChainDownException] if the chain is unreachable.
   Future<UserIdentity> registerWithPasskey({
     required String passkeyCredentialId,
     required String passkeyPublicKey,
@@ -57,6 +58,9 @@ class DecentralizedAuthService {
     if (valid == null) throw IdentityException('Invalid username');
 
     final available = await _contract.isUsernameAvailable(username.value);
+    if (available == null) {
+      throw ChainDownException('Cannot verify username availability — chain unreachable');
+    }
     if (!available) throw IdentityException('Username taken on chain');
 
     final walletSeed = _deriveWalletSeed(passkeyCredentialId);
@@ -66,7 +70,7 @@ class DecentralizedAuthService {
 
     final identityRoot = sha256.convert(utf8.encode('njd_$address')).bytes;
 
-    await _contract.registerIdentity(
+    final registered = await _contract.registerIdentity(
       username: username.value,
       address: address,
       publicKey: pubKey.bytes,
@@ -74,6 +78,9 @@ class DecentralizedAuthService {
       passkeyPublicKey: passkeyPublicKey,
       phoneHash: phoneHash,
     );
+    if (!registered) {
+      throw ChainDownException('Failed to register identity — chain unreachable');
+    }
 
     final identity = UserIdentity(
       id: address,
@@ -103,6 +110,7 @@ class DecentralizedAuthService {
   }
 
   /// Passkey login: WebAuthn assertion → recover wallet → verify on chain.
+  /// Throws [ChainDownException] if chain is unreachable.
   Future<UserIdentity> loginWithPasskey({
     required String passkeyCredentialId,
     required String passkeySignature,
@@ -114,7 +122,8 @@ class DecentralizedAuthService {
 
     final chainIdentity = await _contract.getIdentity(address);
     if (chainIdentity == null) {
-      throw AuthenticationException('Identity not found on chain');
+      // Could be chain-down OR identity truly missing
+      throw AuthenticationException('Identity not found — check chain connectivity');
     }
 
     _session = await _createSession(address, keyPair);
@@ -124,6 +133,7 @@ class DecentralizedAuthService {
   }
 
   /// Wallet ZKP login: sign a challenge with the wallet key, verify on chain.
+  /// Throws [ChainDownException] if chain is unreachable.
   Future<UserIdentity> loginWithWallet({
     required String address,
     required List<int> signature,
@@ -131,7 +141,7 @@ class DecentralizedAuthService {
   }) async {
     final chainIdentity = await _contract.getIdentity(address);
     if (chainIdentity == null) {
-      throw AuthenticationException('Identity not found on chain');
+      throw AuthenticationException('Identity not found — check chain connectivity');
     }
 
     final valid = await _contract.verifySignature(

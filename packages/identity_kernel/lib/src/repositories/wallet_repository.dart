@@ -123,10 +123,14 @@ class MpcWalletRepository implements WalletRepository {
       return {'NACKL': 0, 'SHELL': 0};
     }
 
-    final client = AckiNackiClient(graphqlUrl: chainRpcUrl!);
-    final balances = await client.getBalances(data.address);
-    client.dispose();
-    return balances;
+    try {
+      final client = AckiNackiClient(graphqlUrl: chainRpcUrl!);
+      final balances = await client.getBalances(data.address);
+      client.dispose();
+      return balances;
+    } catch (_) {
+      return {'NACKL': 0, 'SHELL': 0};
+    }
   }
 
   Stream<Wallet> watchWallet(String identityId) {

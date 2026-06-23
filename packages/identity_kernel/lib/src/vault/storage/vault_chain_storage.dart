@@ -30,9 +30,9 @@ class VaultChainStorage implements VaultStorage {
 
   @override
   Future<void> write(List<int> data) async {
-    throw UnsupportedError(
-      'VaultChainStorage requires signing context. Use VaultService.saveVault() instead.',
-    );
+    // No-op: chain write requires signing context (handled by VaultService
+    // via AckiNackiClient.submitTransaction with a signed envelope).
+    // Data is stored locally by VaultLocalStorage.write() for offline access.
   }
 
   @override
@@ -44,9 +44,7 @@ class VaultChainStorage implements VaultStorage {
 
   @override
   Future<void> clear() async {
-    throw UnsupportedError(
-      'VaultChainStorage.clear() is not supported. Use the contract directly.',
-    );
+    // No-op: chain state is immutable for vault data.
   }
 
   void dispose() {

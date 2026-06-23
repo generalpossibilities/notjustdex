@@ -29,3 +29,11 @@ class AuthenticationException implements Exception {
   @override
   String toString() => 'AuthenticationException: $message';
 }
+
+class ChainDownException implements Exception {
+  final String message;
+  const ChainDownException(this.message);
+
+  @override
+  String toString() => 'ChainDownException: $message';
+}

@@ -110,6 +110,9 @@ class DecentralizedFeedService {
           _recalculateScores();
         }
       },
+      onError: (e) {
+        // Chain subscription error — feed works with cached items
+      },
     );
   }
 
@@ -139,14 +142,22 @@ class DecentralizedFeedService {
     final item = _items[idx];
     if (item.hasLiked) return;
 
-    // Submit like to chain (follows pattern: like = small on-chain event)
-    await _identityContract.follow(identityAddress, item.authorAddress);
-
+    // Optimistic update: apply locally first
     _items[idx] = item.copyWith(
       likes: item.likes + 1,
       hasLiked: true,
     );
     _recalculateScores();
+
+    // Submit like to chain — rollback on failure
+    final ok = await _identityContract.follow(identityAddress, item.authorAddress);
+    if (!ok) {
+      _items[idx] = item.copyWith(
+        likes: item.likes,
+        hasLiked: false,
+      );
+      _recalculateScores();
+    }
   }
 
   Future<void> unlike(String itemId) async {

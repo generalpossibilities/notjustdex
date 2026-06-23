@@ -294,13 +294,21 @@ class _VaultSettingsPageState extends State<VaultSettingsPage> {
   }
 
   Future<void> _viewAuditLog() async {
-    final log = await widget.vaultService.getAuditLog(limit: 100);
-    if (!mounted) return;
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => _AuditLogPage(log: log),
-      ),
-    );
+    try {
+      final log = await widget.vaultService.getAuditLog(limit: 100);
+      if (!mounted) return;
+      Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (_) => _AuditLogPage(log: log),
+        ),
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Could not load audit log: $e')),
+        );
+      }
+    }
   }
 
   Future<void> _clearLocalCache() async {
@@ -327,11 +335,19 @@ class _VaultSettingsPageState extends State<VaultSettingsPage> {
     );
 
     if (confirmed == true) {
-      await widget.vaultService.clearLocalCache();
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Local cache cleared')),
-        );
+      try {
+        await widget.vaultService.clearLocalCache();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Local cache cleared')),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Could not clear cache: $e')),
+          );
+        }
       }
     }
   }
