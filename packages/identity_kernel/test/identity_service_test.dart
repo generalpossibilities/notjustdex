@@ -1,10 +1,25 @@
+import 'dart:async';
 import 'package:test/test.dart';
 import 'package:mockito/mockito.dart';
 import 'package:notjustdex_identity_kernel/identity_kernel.dart';
 
 class MockIdentityRepository extends Mock implements IdentityRepository {}
 
-class MockAnIdentityContract extends Mock implements AnIdentityContract {}
+class MockAnIdentityContract extends Mock implements AnIdentityContract {
+  @override
+  Future<UserIdentity?> getIdentity(String address) =>
+      super.noSuchMethod(
+        Invocation.method(#getIdentity, [address]),
+        returnValue: Future<UserIdentity?>.value(null),
+      ) as Future<UserIdentity?>;
+
+  @override
+  Future<bool?> isUsernameAvailable(String username) =>
+      super.noSuchMethod(
+        Invocation.method(#isUsernameAvailable, [username]),
+        returnValue: Future<bool?>.value(null),
+      ) as Future<bool?>;
+}
 
 void main() {
   late MockIdentityRepository repository;
@@ -19,8 +34,12 @@ void main() {
 
   group('IdentityService', () {
     test('throws when identity not found on chain and cache', () async {
-      when(contract.getIdentity('nonexistent')).thenAnswer((_) async => null);
-      when(repository.getIdentity('nonexistent')).thenAnswer((_) async => null);
+      when(contract.getIdentity('nonexistent')).thenAnswer(
+        (_) => Future<UserIdentity?>.value(null),
+      );
+      when(repository.getIdentity('nonexistent')).thenAnswer(
+        (_) => Future<UserIdentity?>.value(null),
+      );
 
       expect(
         () => service.getIdentity('nonexistent'),
@@ -53,7 +72,9 @@ void main() {
         authMethods: [],
         createdAt: DateTime.now(),
       );
-      when(contract.getIdentity('0x456')).thenThrow(Exception('chain-down'));
+      when(contract.getIdentity('0x456')).thenAnswer(
+        (_) => Future.error(Exception('chain-down')),
+      );
       when(repository.getIdentity('0x456')).thenAnswer((_) async => identity);
 
       final result = await service.getIdentity('0x456');
@@ -61,7 +82,9 @@ void main() {
     });
 
     test('checkUsernameAvailability handles chain-down', () async {
-      when(contract.isUsernameAvailable('test')).thenAnswer((_) async => null);
+      when(contract.isUsernameAvailable('test')).thenAnswer(
+        (_) => Future<bool?>.value(null),
+      );
 
       final result = await service.checkUsernameAvailability('test');
       expect(result, false);
