@@ -37,8 +37,11 @@ class MlsMessage {
     epoch: json['epoch'] as int,
     ciphertext: HpkeCiphertext.fromJson(json['ciphertext'] as Map<String, dynamic>),
     signature: Signature(
-      signature: Uint8List.fromList(base64Url.decode(json['signature'] as String)),
-      publicKey: null,
+      Uint8List.fromList(base64Url.decode(json['signature'] as String)),
+      publicKey: SimplePublicKey(
+        Uint8List(0),
+        type: KeyPairType.ed25519,
+      ),
     ),
     messageType: MessageType.values.firstWhere(
       (t) => t.name == json['message_type'],

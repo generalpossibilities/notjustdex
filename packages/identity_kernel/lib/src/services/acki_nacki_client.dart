@@ -228,23 +228,15 @@ class AckiNackiClient {
   }
 
   static Future<List<int>> _ed25519Sign(List<int> message, List<int> privateKey) async {
-    final keyPair = SimpleKeyPair(
-      SimpleKeyPairData(
-        privateKey: privateKey,
-        type: KeyPairType.ed25519,
-      ),
-    );
+    final ed25519 = Ed25519();
+    final keyPair = await ed25519.newKeyPairFromSeed(privateKey);
     final signature = await ed25519.sign(message, keyPair: keyPair);
     return signature.bytes.toList();
   }
 
-  static List<int> _derivePublicKey(List<int> privateKey) async {
-    final keyPair = SimpleKeyPair(
-      SimpleKeyPairData(
-        privateKey: privateKey,
-        type: KeyPairType.ed25519,
-      ),
-    );
+  static Future<List<int>> _derivePublicKey(List<int> privateKey) async {
+    final ed25519 = Ed25519();
+    final keyPair = await ed25519.newKeyPairFromSeed(privateKey);
     final pubKey = await keyPair.extractPublicKey();
     return pubKey.bytes;
   }

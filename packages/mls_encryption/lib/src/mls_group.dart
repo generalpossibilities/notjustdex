@@ -84,7 +84,7 @@ class MlsGroup {
           utf8.encode(message.senderId) +
           message.ciphertext.ciphertext.toList(),
     );
-    if (!await MlsCrypto.verify(toVerify, message.signature, sender.signaturePublicKey)) {
+    if (!await MlsCrypto.verify(toVerify, message.signature.bytes, sender.signaturePublicKey)) {
       throw MlsException.invalidSignature();
     }
 

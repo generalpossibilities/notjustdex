@@ -191,12 +191,7 @@ class MpcWalletRepository implements WalletRepository {
 
   Future<List<int>> _ed25519Sign(List<int> message, List<int> privateKeyBytes) async {
     final ed25519 = Ed25519();
-    final keyPair = SimpleKeyPair(
-      SimpleKeyPairData(
-        privateKey: privateKeyBytes,
-        type: KeyPairType.ed25519,
-      ),
-    );
+    final keyPair = await ed25519.newKeyPairFromSeed(privateKeyBytes);
     final sig = await ed25519.sign(message, keyPair: keyPair);
     return sig.bytes;
   }
@@ -204,8 +199,8 @@ class MpcWalletRepository implements WalletRepository {
   Future<bool> _ed25519Verify(List<int> message, List<int> signature, List<int> publicKey) async {
     try {
       final ed25519 = Ed25519();
-      final sig = Signature(signature: signature, publicKey: SimplePublicKey(publicKey, type: KeyPairType.ed25519));
-      return await ed25519.verify(message, sig);
+      final sig = Signature(signature, publicKey: SimplePublicKey(publicKey, type: KeyPairType.ed25519));
+      return await ed25519.verify(message, signature: sig);
     } catch (_) {
       return false;
     }

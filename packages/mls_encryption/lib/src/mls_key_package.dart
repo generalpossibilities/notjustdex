@@ -40,7 +40,7 @@ class MlsKeyPackage {
     final payload = Uint8List.fromList(
       utf8.encode(userId) + encryptionPublicKey.bytes.toList() + signaturePublicKey.bytes.toList(),
     );
-    return MlsCrypto.verify(payload, signature, signaturePublicKey);
+    return MlsCrypto.verify(payload, signature.bytes, signaturePublicKey);
   }
 
   bool get isExpired => DateTime.now().isAfter(expiresAt);
@@ -64,8 +64,11 @@ class MlsKeyPackage {
       type: KeyPairType.ed25519,
     ),
     signature: Signature(
-      signature: Uint8List.fromList(base64Url.decode(json['signature'] as String)),
-      publicKey: null,
+      Uint8List.fromList(base64Url.decode(json['signature'] as String)),
+      publicKey: SimplePublicKey(
+        Uint8List(0),
+        type: KeyPairType.ed25519,
+      ),
     ),
     expiresAt: DateTime.parse(json['expires_at'] as String),
   );

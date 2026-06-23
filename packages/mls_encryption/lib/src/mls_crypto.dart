@@ -21,7 +21,7 @@ class MlsCrypto {
   ) async {
     final sharedSecret = await _x25519.sharedSecretKey(
       keyPair: SimpleKeyPairData(
-        privateKey.privateKeyBytes!,
+        privateKey.bytes,
         publicKey: privateKey.publicKey,
         type: KeyPairType.x25519,
       ),
@@ -88,10 +88,14 @@ class MlsCrypto {
 
   static Future<bool> verify(
     Uint8List message,
-    Signature signature,
+    Uint8List signatureBytes,
     SimplePublicKey publicKey,
   ) async {
-    return _ed25519.verify(message, signature: signature, publicKey: publicKey);
+    final sig = Signature(
+      signatureBytes,
+      publicKey: publicKey,
+    );
+    return _ed25519.verify(message, signature: sig);
   }
 
   static Uint8List hashRatchet(Uint8List key, int generation) {

@@ -59,12 +59,7 @@ class WalletService {
   Future<List<int>> signChallenge(String identityId, List<int> challenge) async {
     final privKey = await _repository.getPrivateKey(identityId);
     final ed25519 = Ed25519();
-    final keyPair = SimpleKeyPair(
-      SimpleKeyPairData(
-        privateKey: privKey,
-        type: KeyPairType.ed25519,
-      ),
-    );
+    final keyPair = await ed25519.newKeyPairFromSeed(privKey);
     final sig = await ed25519.sign(challenge, keyPair: keyPair);
     return sig.bytes.toList();
   }
