@@ -5,8 +5,8 @@ import 'package:crypto/crypto.dart' show sha256;
 import 'package:cryptography/cryptography.dart';
 
 class MlsCrypto {
-  static const _ed25519 = Ed25519();
-  static const _x25519 = X25519();
+  static final _ed25519 = Ed25519();
+  static final _x25519 = X25519();
   static final _aesGcm = AesGcm.with256bits();
   static final _rand = Random.secure();
 

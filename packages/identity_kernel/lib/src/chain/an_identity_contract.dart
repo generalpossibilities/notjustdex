@@ -102,8 +102,8 @@ class AnIdentityContract {
   }
 
   /// Verify an Ed25519 signature against the stored public key.
-  /// False = invalid signature OR chain-down.
-  Future<bool> verifySignature({
+  /// Null = chain-down. False = invalid signature.
+  Future<bool?> verifySignature({
     required String address,
     required List<int> message,
     required List<int> signature,

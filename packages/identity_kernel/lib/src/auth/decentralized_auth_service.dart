@@ -145,7 +145,7 @@ class DecentralizedAuthService {
       message: challenge,
       signature: signature,
     );
-    if (!valid) throw AuthenticationException('Invalid wallet signature');
+    if (valid != true) throw AuthenticationException('Invalid wallet signature');
 
     _session = SignedChallenge(
       address: address,
@@ -176,15 +176,12 @@ class DecentralizedAuthService {
   /// Validate current session against the chain (optional — can also verify locally).
   Future<bool> validateSession() async {
     if (_session == null) return false;
-    try {
-      return await _contract.verifySignature(
-        address: _session!.address,
-        message: _session!.challenge,
-        signature: _session!.signature,
-      );
-    } catch (_) {
-      return false;
-    }
+    final ok = await _contract.verifySignature(
+      address: _session!.address,
+      message: _session!.challenge,
+      signature: _session!.signature,
+    );
+    return ok ?? false;
   }
 
   Future<SignedChallenge> _createSession(
@@ -192,7 +189,8 @@ class DecentralizedAuthService {
     SimpleKeyPair keyPair,
   ) async {
     final challenge = _generateChallenge();
-    final sig = await keyPair.sign(challenge);
+    final alg = Ed25519();
+    final sig = await alg.sign(challenge, keyPair: keyPair);
     return SignedChallenge(
       address: address,
       challenge: challenge,
