@@ -11,8 +11,10 @@ class SessionService {
   String? get token => _get('token');
   String? get userId => _get('userId');
   String? get username => _get('username');
+  String? get walletAddress => _get('walletAddress');
   String? get displayName => _get('displayName');
   String? get phoneNumber => _get('phoneNumber');
+  bool get isIdentityComplete => username != null && username!.isNotEmpty && walletAddress != null && walletAddress!.isNotEmpty;
 
   String? _get(String key) {
     if (!_initialized) return null;
@@ -34,6 +36,7 @@ class SessionService {
     required String token,
     required String userId,
     required String username,
+    String? walletAddress,
     String? displayName,
     String? phoneNumber,
   }) async {
@@ -42,6 +45,7 @@ class SessionService {
       'token': token,
       'userId': userId,
       'username': username,
+      if (walletAddress != null) 'walletAddress': walletAddress,
       if (displayName != null) 'displayName': displayName,
       if (phoneNumber != null) 'phoneNumber': phoneNumber,
     });

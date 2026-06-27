@@ -6,6 +6,8 @@ import 'src/onboarding/welcome_page.dart';
 import 'src/onboarding/phone_entry_page.dart';
 import 'src/onboarding/verification_page.dart';
 import 'src/onboarding/username_page.dart';
+import 'src/onboarding/wallet_ask_page.dart';
+import 'src/onboarding/wallet_connect_page.dart';
 import 'src/onboarding/tour_page.dart';
 import 'src/onboarding/auth_page.dart';
 import 'src/core/modules/app_module.dart';
@@ -132,6 +134,18 @@ class _NotJustDexAppState extends State<NotJustDexApp> {
         path: '/onboarding/username',
         builder: (_, state) => UsernamePage(
           phoneNumber: state.extra as String,
+        ),
+      ),
+      GoRoute(
+        path: '/onboarding/wallet-ask',
+        builder: (_, state) => WalletAskPage(
+          phoneNumber: state.extra as String? ?? '',
+        ),
+      ),
+      GoRoute(
+        path: '/onboarding/wallet-connect',
+        builder: (_, state) => WalletConnectPage(
+          phoneNumber: state.extra as String? ?? '',
         ),
       ),
       GoRoute(

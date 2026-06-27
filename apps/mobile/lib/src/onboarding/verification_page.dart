@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../core/services/session_service.dart';
 
 class VerificationPage extends StatefulWidget {
   final String phoneNumber;
@@ -139,6 +140,15 @@ class _VerificationPageState extends State<VerificationPage> {
     }
 
     if (!mounted) return;
-    context.push('/onboarding/username', extra: widget.phoneNumber);
+    // Save a limited session (phone verified, no identity yet)
+    final session = SessionService();
+    await session.saveSession(
+      token: widget.phoneNumber.hashCode.toString(),
+      userId: '',
+      username: '',
+      phoneNumber: widget.phoneNumber,
+    );
+    if (!mounted) return;
+    context.go('/home');
   }
 }

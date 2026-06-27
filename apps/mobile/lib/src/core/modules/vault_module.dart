@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:notjustdex_identity_kernel/notjustdex_identity_kernel.dart';
+import 'package:notjustdex_identity_kernel/identity_kernel.dart';
 import 'app_module.dart';
 import '../../vault/vault_page.dart';
 import '../../vault/vault_entry_form.dart';

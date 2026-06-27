@@ -1,8 +1,9 @@
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:crypto/crypto.dart';
-import 'package:notjustdex_identity_kernel/notjustdex_identity_kernel.dart';
+import 'package:notjustdex_identity_kernel/identity_kernel.dart';
 import '../core/services/session_service.dart';
 
 class ProfileSettingsPage extends StatefulWidget {
@@ -118,6 +119,55 @@ class _ProfileSettingsPageState extends State<ProfileSettingsPage> {
             trailing: const Icon(Icons.chevron_right),
             onTap: _pickPhoto,
           ),
+
+          if (!_session.isIdentityComplete) ...[
+            const Divider(height: 32),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: theme.colorScheme.tertiaryContainer,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(Icons.info_outline, color: theme.colorScheme.onTertiaryContainer, size: 20),
+                      const SizedBox(width: 8),
+                      Text('Complete your profile', style: theme.textTheme.titleSmall?.copyWith(
+                        color: theme.colorScheme.onTertiaryContainer)),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text('Set up your username and wallet to access all features.',
+                    style: TextStyle(fontSize: 13, color: theme.colorScheme.onTertiaryContainer)),
+                  const SizedBox(height: 12),
+                  OverflowBar(
+                    spacing: 8,
+                    overflowAlignment: OverflowBarAlignment.start,
+                    children: [
+                      if (_session.username == null || _session.username!.isEmpty)
+                        FilledButton.tonalIcon(
+                          icon: const Icon(Icons.alternate_email, size: 18),
+                          label: const Text('Choose Username'),
+                          onPressed: () => context.push('/onboarding/username',
+                              extra: _session.phoneNumber ?? ''),
+                        ),
+                      if (_session.walletAddress == null || _session.walletAddress!.isEmpty)
+                        FilledButton.tonalIcon(
+                          icon: const Icon(Icons.account_balance_wallet, size: 18),
+                          label: const Text('Connect Wallet'),
+                          onPressed: () => context.push('/onboarding/wallet-connect',
+                              extra: _session.phoneNumber ?? ''),
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
 
           const Divider(height: 32),
 

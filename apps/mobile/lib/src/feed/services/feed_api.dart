@@ -1,5 +1,5 @@
 import 'dart:convert';
-import 'package:notjustdex_identity_kernel/notjustdex_identity_kernel.dart';
+import 'package:notjustdex_identity_kernel/identity_kernel.dart';
 import '../feed_item_model.dart';
 
 /// Feed API client — chain+IPFS only.

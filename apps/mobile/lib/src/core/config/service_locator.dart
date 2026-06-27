@@ -1,3 +1,4 @@
+import 'package:notjustdex_identity_kernel/identity_kernel.dart';
 import 'features.dart';
 
 /// Decentralized service locator.
@@ -10,8 +11,31 @@ class ServiceLocator {
   ServiceLocator._();
 
   late AppConfig config;
+  AnLightClient? _lightClient;
+  AnIdentityContract? _identityContract;
+
+  AnLightClient get lightClient {
+    if (_lightClient == null) throw StateError('ServiceLocator not initialized');
+    return _lightClient!;
+  }
+
+  AnIdentityContract get identityContract {
+    if (_identityContract == null) throw StateError('ServiceLocator not initialized');
+    return _identityContract!;
+  }
 
   Future<void> init() async {
-    config = await AppConfig.load();
+    config = AppConfig.fromDefine();
+
+    // Initialize chain client with fallback RPC endpoints
+    _lightClient = AnLightClient([
+      'https://mainnet.ackinacki.org/graphql',
+      'https://shellnet.ackinacki.org/graphql',
+    ]);
+
+    _identityContract = AnIdentityContract(
+      client: _lightClient!,
+      contractAddress: '0:notjustdex_identity_contract', // placeholder
+    );
   }
 }

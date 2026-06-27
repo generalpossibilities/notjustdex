@@ -1,10 +1,13 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:crypto/crypto.dart';
 import 'package:cryptography/cryptography.dart';
+import 'package:notjustdex_identity_kernel/identity_kernel.dart';
 import '../core/services/session_service.dart';
 import '../core/services/passkey_service.dart';
+import '../core/config/service_locator.dart';
 
 class UsernamePage extends StatefulWidget {
   final String phoneNumber;
@@ -72,11 +75,7 @@ class _UsernamePageState extends State<UsernamePage> {
                 onChanged: (v) {
                   setState(() { _isChecking = v.length >= 4; _isAvailable = false; _errorMessage = ''; });
                   if (v.length >= 4) {
-                    Future.delayed(const Duration(milliseconds: 400), () {
-                      if (mounted) {
-                        setState(() { _isAvailable = true; _isChecking = false; });
-                      }
-                    });
+                    _checkAvailability(v);
                   }
                 },
               ),
@@ -126,8 +125,52 @@ class _UsernamePageState extends State<UsernamePage> {
     );
   }
 
+  Future<void> _checkAvailability(String username) async {
+    await Future.delayed(const Duration(milliseconds: 400));
+    if (!mounted || _usernameController.text.trim() != username) return;
+
+    setState(() { _isChecking = true; });
+    try {
+      final contract = ServiceLocator.instance.identityContract;
+      final available = await contract.isUsernameAvailable(username);
+      if (!mounted || _usernameController.text.trim() != username) return;
+      setState(() {
+        _isAvailable = available ?? true; // true = available if chain unreachable
+        _isChecking = false;
+        if (available == null) {
+          _errorMessage = '⚠️ Chain unreachable — will check later';
+        }
+      });
+    } catch (_) {
+      if (!mounted || _usernameController.text.trim() != username) return;
+      setState(() {
+        _isAvailable = true;
+        _isChecking = false;
+        _errorMessage = '⚠️ Chain unreachable — will retry on submission';
+      });
+    }
+  }
+
   Future<void> _createAccount() async {
     setState(() { _isCreating = true; _errorMessage = ''; });
+
+    // Confirm availability on chain before submission
+    try {
+      final contract = ServiceLocator.instance.identityContract;
+      final available = await contract.isUsernameAvailable(_usernameController.text.trim());
+      if (available == false) {
+        if (mounted) {
+          setState(() {
+            _isCreating = false;
+            _isAvailable = false;
+            _errorMessage = 'Username taken on chain — try another';
+          });
+        }
+        return;
+      }
+    } catch (_) {
+      // Chain down — proceed anyway, will sync later
+    }
 
     try {
       // 1. Create passkey (WebAuthn biometric credential)

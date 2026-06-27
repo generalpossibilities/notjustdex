@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:notjustdex_identity_kernel/notjustdex_identity_kernel.dart';
+import 'package:notjustdex_identity_kernel/identity_kernel.dart';
 
 class VaultSettingsPage extends StatefulWidget {
   final VaultService vaultService;

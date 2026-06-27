@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:notjustdex_identity_kernel/notjustdex_identity_kernel.dart';
+import 'package:notjustdex_identity_kernel/identity_kernel.dart';
 
 class VaultDetailPage extends StatefulWidget {
   final VaultEntry entry;
